@@ -1,1 +1,0 @@
-# Resolución Proposicional
