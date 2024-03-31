@@ -14,9 +14,11 @@ command = "mdbook-mermaid"
 command = "mdbook-admonish"
 assets_version = "3.0.2" # do not edit: managed by `mdbook-admonish install`
 
+[preprocessor.pagetoc]
+
 [output]
 
 [output.html]
-additional-js = ["mermaid.min.js", "mermaid-init.js"]
-additional-css = ["./custom.css", "./mdbook-admonish.css"]
+additional-js = ["mermaid.min.js", "mermaid-init.js", "theme/pagetoc.js"]
+additional-css = ["./custom.css", "./mdbook-admonish.css", "theme/pagetoc.css"]
 mathjax-support = true
