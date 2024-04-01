@@ -127,7 +127,7 @@ cantDivisoresMenoresA n divisorCandidato | mod n divisorCandidato == 0 = 1 + div
                                          where divisoresMenores = cantDivisoresMenoresA n (divisorCandidato - 1)
 ```
 
-### Ejercicio 3
+## Ejercicio 3
 
 Contamos con los tipos `Maybe` y `Either` definidos como sigue:
 
@@ -153,7 +153,7 @@ aEntero (Right True) = 1
 aEntero (Right False) = 0
 ```
 
-### Ejercicio 4
+## Ejercicio 4
 
 Definir las siguientes funciones sobre listas:
 
@@ -185,7 +185,7 @@ todosIguales [] = True
 todosIguales (x:xs) = all (== x) xs
 ```
 
-### Ejercicio 5
+## Ejercicio 5
 
 Dado el siguiente modelo para árboles binarios:
 

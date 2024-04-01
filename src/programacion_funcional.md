@@ -74,7 +74,12 @@ En Haskell organizamos los valores en **tipos**. El tipo tiene operaciones asoci
 - Expresiones Lambda:
 
     ```haskell
+    -- con un parámetro
     \x -> x + 1
+    -- con muchos parámetros
+    \x -> \y -> x + y
+    -- escritura más simple, separo parámetros con espacios
+    \x y -> x + y
     ```
 
 ```
@@ -435,3 +440,19 @@ noVacias x:xs   | length x > 0     = x : (noVacias xs)
 
 ```
 
+## Transparencia referencial
+
+Una propiedad de haskell (y otros lenguajes funcionales) es la de la
+**transparencia referencial**. Esto qué significa? Que el resultado de evaluar
+una expresión sólo depende de sus subexpresiones. Eso tiene la implicancia de
+que si yo tengo 2 veces la misma subexpresión ambas van a evaluar al mismo
+valor.
+
+Un ejemplo para ver qué no tiene transparencia referencial es en un lenguaje imperativo como C puedo hacer:
+
+```c
+algunaFuncion(x++, x++);
+```
+
+Estoy llamando a `algunaFuncion` y los parámetros son ambos `x++` pero no van a
+tener el mismo valor.

@@ -2,6 +2,7 @@
 
 - [Unidad 1 - Programación Funcional Con Haskell](./unidad_1.md)
     - [Intro a Haskell](./programacion_funcional.md)
+    - [Esquemas de recursión](./esquemas_de_recursion.md)
 - [Unidad 2 - Cálculo Lambda](./unidad_2.md)
     - [Cálculo Lambda Tipado Bolleano](./lambda_calc_booleano.md)
     - [Cálculo Lambda Tipado Extendido](./lambda_calc_extendido.md)
