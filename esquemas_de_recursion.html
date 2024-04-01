@@ -1,0 +1,492 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Esquemas de recursión - Apunte Final Paradigmas de Lenguajes de Programación 2024</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="./custom.css">
+        <link rel="stylesheet" href="./mdbook-admonish.css">
+        <link rel="stylesheet" href="theme/pagetoc.css">
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="unidad_1.html"><strong aria-hidden="true">1.</strong> Unidad 1 - Programación Funcional Con Haskell</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="programacion_funcional.html"><strong aria-hidden="true">1.1.</strong> Intro a Haskell</a></li><li class="chapter-item expanded "><a href="esquemas_de_recursion.html" class="active"><strong aria-hidden="true">1.2.</strong> Esquemas de recursión</a></li></ol></li><li class="chapter-item expanded "><a href="unidad_2.html"><strong aria-hidden="true">2.</strong> Unidad 2 - Cálculo Lambda</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="lambda_calc_booleano.html"><strong aria-hidden="true">2.1.</strong> Cálculo Lambda Tipado Bolleano</a></li><li class="chapter-item expanded "><a href="lambda_calc_extendido.html"><strong aria-hidden="true">2.2.</strong> Cálculo Lambda Tipado Extendido</a></li><li class="chapter-item expanded "><a href="inferencia_de_tipos.html"><strong aria-hidden="true">2.3.</strong> Inferencia de tipos</a></li><li class="chapter-item expanded "><a href="subtipado.html"><strong aria-hidden="true">2.4.</strong> Subtipado</a></li></ol></li><li class="chapter-item expanded "><a href="unidad_3.html"><strong aria-hidden="true">3.</strong> Unidad 3 - Paradigma de Objetos</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="javascript_intro.html"><strong aria-hidden="true">3.1.</strong> Intro a Javascript</a></li><li class="chapter-item expanded "><a href="sigma_calc.html"><strong aria-hidden="true">3.2.</strong> Cálculo Sigma</a></li></ol></li><li class="chapter-item expanded "><a href="unidad_4.html"><strong aria-hidden="true">4.</strong> Unidad 4 - Programación Lógica</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="prop_solv.html"><strong aria-hidden="true">4.1.</strong> Resolución Proposicional</a></li><li class="chapter-item expanded "><a href="primer_orden_solv.html"><strong aria-hidden="true">4.2.</strong> Resolución en lógica de primer orden</a></li><li class="chapter-item expanded "><a href="sld_solv.html"><strong aria-hidden="true">4.3.</strong> Resolución SLD</a></li><li class="chapter-item expanded "><a href="prolog.html"><strong aria-hidden="true">4.4.</strong> Prolog</a></li></ol></li><li class="chapter-item expanded "><a href="practicas.html"><strong aria-hidden="true">5.</strong> Prácticas</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="guia_0.html"><strong aria-hidden="true">5.1.</strong> Guia 0 - Repaso Haskell</a></li><li class="chapter-item expanded "><a href="guia_1.html"><strong aria-hidden="true">5.2.</strong> Guia 1 - Programación funcional</a></li><li class="chapter-item expanded "><a href="guia_2.html"><strong aria-hidden="true">5.3.</strong> Guia 2 - Cálculo Lambda Tipado</a></li><li class="chapter-item expanded "><a href="guia_3.html"><strong aria-hidden="true">5.4.</strong> Guia 3 - Inferencia de Tipos</a></li><li class="chapter-item expanded "><a href="guia_4.html"><strong aria-hidden="true">5.5.</strong> Guia 4 - Subtipado</a></li><li class="chapter-item expanded "><a href="guia_5.html"><strong aria-hidden="true">5.6.</strong> Guia 5 - Programación Orientada a Objetos</a></li><li class="chapter-item expanded "><a href="guia_6.html"><strong aria-hidden="true">5.7.</strong> Guia 6 - Resolución Lógica</a></li><li class="chapter-item expanded "><a href="guia_7.html"><strong aria-hidden="true">5.8.</strong> Guia 7 - Programación Lógica</a></li></ol></li><li class="chapter-item expanded "><a href="bibliografía.html"><strong aria-hidden="true">6.</strong> Bibliografía</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Apunte Final Paradigmas de Lenguajes de Programación 2024</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main><div class="sidetoc"><nav class="pagetoc"></nav></div>
+                        <h1 id="esquemas-de-recursión"><a class="header" href="#esquemas-de-recursión">Esquemas de recursión</a></h1>
+<h2 id="esquemas-de-recursión-sobre-listas"><a class="header" href="#esquemas-de-recursión-sobre-listas">Esquemas de recursión sobre listas</a></h2>
+<h3 id="recursión-estructural"><a class="header" href="#recursión-estructural">Recursión estructural</a></h3>
+<p>Pensemos un par de funciones sobre listas:</p>
+<ul>
+<li>
+<p><code>sumaL</code>: la suma de todos los valores de una lista de enteros</p>
+<pre><code class="language-haskell">-- alguna def con tipos
+sumaL [] = 0
+sumaL (x:xs) = x + sumaL(xs)
+</code></pre>
+</li>
+<li>
+<p><code>concat</code>: la concatenación de todos los elementos de una lista de listas</p>
+<pre><code class="language-haskell">-- alguna def con tipos
+concat [] = []
+concat (x:xs) = x ++ concat xs
+</code></pre>
+</li>
+<li>
+<p><code>reverso</code>: el reverso de una lista</p>
+<pre><code class="language-haskell">reverso [] = []
+reverso (x:xs) = reverso xs ++ [x]
+</code></pre>
+</li>
+</ul>
+<div id="admonition-generalizando" class="admonition admonish-info">
+<div class="admonition-title">
+<p>Generalizando...</p>
+<p><a class="admonition-anchor-link" href="#admonition-generalizando"></a></p>
+</div>
+<div>
+<p><strong>El approach es siempre el mismo</strong>. Asumo que se calcular el resultado para el
+caso más chico y hago alguna operación para combinar todo, y el resultado puede
+ser otra cosa distinta, no necesariamente una lista. Sumado a eso tenemos un
+caso base distinguido.</p>
+<pre><code class="language-haskell">g :: [a] -&gt; b
+-- caso base distinguido
+g [] = z
+g (x:xs) = f x (g xs)
+</code></pre>
+<p>Generalizando, obtenemos el fold:</p>
+<p><img src="./img/foldr_scheme.png#center" alt="" /></p>
+<pre><code class="language-haskell">-- recibimos una función, un elemento para el caso base y una lista
+-- la función recibe un elemnto de la lista, y lo otro de tipo b es el resultado parcial
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; [a] -&gt; b
+foldr _ z [] = z
+foldr f z (x:xs) = f x (foldr f z xs)
+</code></pre>
+</div>
+</div>
+<h4 id="algunos-ejemplos-con-foldr"><a class="header" href="#algunos-ejemplos-con-foldr">Algunos ejemplos con <code>foldr</code></a></h4>
+<p>Podemos repensar las funciones de antes usando <code>foldr</code>:</p>
+<pre><code class="language-haskell">-- a = b = Int =&gt; (+) :: Int -&gt; Int -&gt; Int === a -&gt; b -&gt; b
+sumaL = foldr (+) 0
+-- a = b = [a'] =&gt; (++) :: [a'] -&gt; [a'] -&gt; [a'] === a -&gt; b -&gt; b
+concat = foldr (++) []
+-- a = a', b = [a'] =&gt; (:) :: a' -&gt; [a'] -&gt; [a'] === a -&gt; b -&gt; b
+-- flip toma una función de 2 parámetros y les invierte el orden
+-- al componerlo con (:[]) lo que hace es al primer parámetro (a')
+-- lo mete en la lista vacía. Luego se pasa a flip (++) que va a 
+-- hacer el ++ usando el primer parámetro como segundo
+reverso = foldr ((flip (++)) . (:[])) []
+-- alternativa más legible en mi opinión
+reverso = foldr (\elem -&gt; \partial -&gt; partial ++ [elem]) []
+</code></pre>
+<p>Y también podemos reimplementar <code>map</code> y <code>filter</code> usando <code>foldr</code>:</p>
+<pre><code class="language-haskell">map f = foldr (\elem -&gt; \partial -&gt; (f elem):partial) []
+-- alternativa: (:) es una función a -&gt; [a] -&gt; [a]. 
+-- La compongo con f (sobre el primer elemento) y gané
+-- map f = foldr ((:) . f) []
+filter f = foldr (\elem -&gt; \partial -&gt; if f elem then (elem:partial) else partial) []
+</code></pre>
+<p>Podemos implementar <code>(++)</code> usando <code>foldr</code>?</p>
+<pre><code class="language-haskell">(++) :: [a] -&gt; [a] -&gt; [a]
+xs ++ ys = foldr (:) ys xs
+</code></pre>
+<p>Ahora probemos algo más complicado. Definamos <code>sumaLong</code> que calcula la
+longitud y la suma en una únca pasada sobre una lista.</p>
+<pre><code class="language-haskell">sumaLong :: [Int] -&gt; (Int, Int)
+-- hago pattern matching contra una tupla
+sumaLong = foldr (\elem -&gt; \(recLong, recSum) -&gt; (recLong + elem, recSum + 1)) (0, 0)
+</code></pre>
+<p>Por último, podemos definir <code>dropWhile</code> usando foldr? Ej de uso: <code>dropWhile even [2, 4, 1, 6] = [1, 6]</code>. La definición "clásica" es:</p>
+<pre><code class="language-haskell">dropWhile :: (a -&gt; Bool) -&gt; [a] -&gt; [a]
+dropWhile _ [] = []
+dropWhile p (x:xs) = if p x then dropWhile p xs else x:xs
+</code></pre>
+<p>La intuición me dice de que esto no se va a poder, porque ahora no tenemos el
+final de la recursión cuando se nos acaba la lista, si no que depende de los
+elementos. Igual intentemos:</p>
+<pre><code class="language-haskell">dropWhile = foldr (\x rec -&gt; ????????) []
+</code></pre>
+<p>Tengo un problema... Si justo tenía que cortar en <code>x</code>, no tengo forma de
+"decirle" al caso recursivo que no tiene que filtrar, y tampoco tengo cómo
+recuperar lo que falta de la lista.</p>
+<p>Cómo puedo sobreponerme a esto? Bueno, por algo vimos el ejemplo anterior de
+<code>SumaLong</code>. Podría hacer que mi función devuelva una tupla, en donde el primer
+elemento es el resultado del <code>dropWhile</code> y el segundo es la lista sin filtrar.</p>
+<pre><code class="language-haskell">dropWhile p = fst (foldr (\x (droppedRec, undroppedRec) -&gt; 
+        if p x then (undroppedRec, x:undroppedRec) 
+        else (x:droppedRec, x:undroppedRec)) ([], []))
+-- alternativa
+dropWhile p = fst (foldr (\x (droppedRec, undroppedRec) -&gt; 
+        (if p x then undroppedRec else x:droppedRec, x:undroppedRec)) ([], []))
+-- alternativa: llamo a lo de arriba sin el fst dropWhileTupla y después dropWhile p xs = fst (dropWhileTupla p xs)
+</code></pre>
+<h3 id="recursión-primitiva"><a class="header" href="#recursión-primitiva">Recursión Primitiva</a></h3>
+<p>Tomando este problema que tuvimos con <code>foldr</code> para implementar <code>dropWhile</code>, por
+qué no nos definimos otra función que si tenga en cuenta el <code>xs</code> del resto de
+la lista?</p>
+<p>El esquema de <code>dropWhile</code> sería:</p>
+<pre><code class="language-haskell">g :: [a] -&gt; b
+-- caso base
+g [] = z
+-- recursión
+g (x:xs) = f x xs (g xs)
+</code></pre>
+<p>Y la generalización la llamamos <code>recr</code>:</p>
+<pre><code class="language-haskell">recr :: b -&gt; (a -&gt; [a] -&gt; b -&gt; b) -&gt; [a] -&gt; b
+recr z _ [] = z
+recr z f (x:xs) = f x xs (recr z f xs)
+</code></pre>
+<div id="admonition-sobre-funciones-primitivas-recursivas" class="admonition admonish-info">
+<div class="admonition-title">
+<p>Sobre funciones Primitivas Recursivas</p>
+<p><a class="admonition-anchor-link" href="#admonition-sobre-funciones-primitivas-recursivas"></a></p>
+</div>
+<div>
+<p>Las funciones Primitivas Recursivas son un conjunto de funciones que vemos en
+Lógica y Computabilidad, y en particular tienen un esquema de recursión muy
+parecido a este que acabamos de ver. Dicho eso, sabemos que no son todas las
+funciones computables debido a que por ejemplo <a href="https://planetmath.org/ackermannfunctionisnotprimitiverecursive">no existe una primitiva recursiva que pueda calcular la función de Ackermann</a>.</p>
+<p>Sin embargo, es posible con <code>foldr</code> implementar la función de Ackermann. Esto
+da cuenta realmente del poder de expresividad de <code>foldr</code>.</p>
+</div>
+</div>
+<p>Podemos reimplementar <code>dropWhile</code> usando <code>recr</code>?</p>
+<pre><code class="language-haskell">dropWhile p = recr [] (\x xs rec -&gt; if p x then xs else x:rec)
+</code></pre>
+<p>Mucho más simple!</p>
+<p>Podemos escribir <code>foldr</code> usando <code>recr</code>?</p>
+<pre><code class="language-haskell">foldr f z = recr z (\x xs rec -&gt; f x rec)
+</code></pre>
+<p>Y <code>recr</code> en términos de <code>foldr</code>?</p>
+<pre><code class="language-haskell">-- Uso el mismo truco de antes, devuelvo la tupla manteniendo en el segundo elemento
+recr z f = fst . (foldr (\x (rec, xs) -&gt; (f x xs rec, x:xs)) (z, []))
+</code></pre>
+<div id="admonition-foldl" class="admonition admonish-info">
+<div class="admonition-title">
+<p>foldl</p>
+<p><a class="admonition-anchor-link" href="#admonition-foldl"></a></p>
+</div>
+<div>
+<p>Una alternativa a <code>foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; [a] -&gt; b</code> es <code>foldl</code> (notar
+que se invierte el orden de los tipos en la función):</p>
+<pre><code class="language-haskell">foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; [a] -&gt; b
+foldl _ z [] = z
+foldl f z (x:xs) = foldl f (f z x) xs
+</code></pre>
+<p>La lista ahora se "recorre" de adelante hacia atrás:</p>
+<p><img src="./img/foldl_scheme.png" alt="" /></p>
+<p>Otro detalle es que ahora el llamado recursivo no es parte de la <code>f</code>. Si
+volvemos a revisar <code>foldr</code> vamos a notar que si <code>xs</code> era una lista infinita,
+pero <code>f</code> ignora la lista no pasa nada. En cambio acá si tenés problemas porque
+se consume la lista entera incluso si <code>f</code> no la usa.</p>
+<p>Notar que en <code>foldl</code> el <code>z</code> es el resultado parcial, no el caso base (o más
+bien, es el caso base en el primer elemento y después es el resultado parcial
+acumulado).</p>
+<p>Si queremos ver un ejemplo, tomemos <code>sumaL</code>:</p>
+<pre><code class="language-haskell">sumaL = foldl (+) 0
+</code></pre>
+<p>Es igual! Pero el orden de evaluación cambia:</p>
+<pre><code class="language-haskell">foldl (+) 0 [1, 2]
+foldl (+) ((+) 0 1) [2]
+foldl (+) ((+) ((+) 0 1) 2) []
+((+) ((+) 0 1) 2)
+((+) 1 2)
+3
+</code></pre>
+<p>Otro ejemplo, el reverse!:</p>
+<pre><code class="language-haskell">reverse = foldl (\acc x -&gt; x:acc) []
+-- equivalentemente
+reverse = foldl (flip (:)) []
+</code></pre>
+</div>
+</div>
+<h3 id="foldl-vs-foldr"><a class="header" href="#foldl-vs-foldr"><code>foldl</code> vs <code>foldr</code></a></h3>
+<ul>
+<li>En listas infinitas? Usá <code>foldr</code></li>
+<li>Puedo escribir <code>foldl</code> usando <code>foldr</code>?</li>
+</ul>
+<pre><code class="language-haskell">-- galerazo: en lugar de acumular y listo, devuelvo una función 
+-- que cuando la aplique va a tomar el orden del foldl (asumamos 
+-- que g es alguna función que toma un elemento)
+foldl f z xs = foldr (\x recf -&gt; (\ac -&gt; recf (f ac x))) (g) 
+</code></pre>
+<p>Creo que ayuda más a entender si lo vemos con un ejemplo y lo expandimos:</p>
+<pre><code class="language-haskell">-- supongamos que hacemos foldl f g [x, y]
+-- al final de la recursión tenemos:
+(\ac -&gt; g (f ac y))
+-- cuando se vuelve de la recursión y se aplica el siguiente paso
+(\ac' -&gt; (\ac -&gt; g (f ac y)) (f ac' x))
+-- Si hacemos el reemplazo en la evaluación:
+(\ac' -&gt; g (f (f ac' x) y))
+-- ahí se puede ver que si ac' es el caso base z, tendría la evaluación en el orden del foldl
+</code></pre>
+<p>Por último entonces, alcanza con notar que si <code>g = id</code> ya gané. O sea que queda definida como:</p>
+<pre><code class="language-haskell">foldl f z xs = foldr (\x recf -&gt; (\ac -&gt; recf (f ac x))) id z
+</code></pre>
+<ul>
+<li>Puedo escribir <code>foldr</code> usando <code>foldl</code>? No, pero si para listas finitas</li>
+</ul>
+<h1 id="esquemas-de-recursión-sobre-tipos-de-datos-algebráicos"><a class="header" href="#esquemas-de-recursión-sobre-tipos-de-datos-algebráicos">Esquemas de recursión sobre tipos de datos algebráicos</a></h1>
+<h2 id="Árboles-binarios"><a class="header" href="#Árboles-binarios">Árboles binarios</a></h2>
+<p>Recuerdo, yo podía definir un árbol binario como:</p>
+<pre><code class="language-haskell">data Arbol a = Hoja a | Nodo a (Arbol a) (Arbol a)
+</code></pre>
+<p>Y podría querer por ejemplo aplicar una función a todos los nodos. A qué te
+suena eso? Así es, al <code>map</code>. En el caso de árboles tendríamos un <code>map</code> definido
+como:</p>
+<pre><code class="language-haskell">mapA :: (a -&gt; b) -&gt; Arbol a -&gt; Arbol b
+mapA f (Hoja x) = Hoja (f x)
+mapA f (Nodo a (sai) (sad)) = (Nodo (f a) (mapA f sai) (mapA f sad))
+</code></pre>
+<p>Así como puedo hacer <code>map</code>, puedo hacer <code>fold</code> también:</p>
+<pre><code class="language-haskell">-- recibo una función para aplicar en el caso base y otra 
+-- para la combinación. La segunda recibe los resultados del
+-- fold para ambas ramas
+foldA :: (a -&gt; b) -&gt; (a -&gt; b -&gt; b -&gt; b) -&gt; Arbol a -&gt; b
+foldA f g (Hoja x) = f x
+foldA f g (Nodo x izq der) = g x (foldA f g izq) (foldA f g der)
+</code></pre>
+<h3 id="algunas-operaciones-interesantes"><a class="header" href="#algunas-operaciones-interesantes">Algunas operaciones interesantes</a></h3>
+<pre><code class="language-haskell">-- no te suena al foldr (:) = id?
+-- obs: fold aplicado a los constructores es la identidad
+id = foldA Hoja Nodo
+
+sumaA = foldA id (\x izq der -&gt; x + izq + der)
+
+altura = fold (\x -&gt; 1) (\x izq der -&gt; max izq der + 1)
+</code></pre>
+<h2 id="Árboles-generales"><a class="header" href="#Árboles-generales">Árboles Generales</a></h2>
+<pre><code class="language-haskell">data AG a = NodoAG a [AG a]
+</code></pre>
+<p>La pregunta es cómo hago <code>fold</code>/<code>map</code> con esto?</p>
+<pre><code class="language-haskell">mapAG :: (a -&gt; b) -&gt; AG a -&gt; AG b
+-- uso tanto map como mapAG!!!
+mapAG f (NodoAG a as) = NodoAG (f a) (map (mapAG f) as)
+</code></pre>
+<pre><code class="language-haskell">-- No tengo "caso base" porque map _ [] = []. 
+-- Ya está implícito el caso base
+foldAG :: (a -&gt; [b] -&gt; b) -&gt; AG a -&gt; b
+-- notar que es igual a antes, pero en lugar de aplicar al nodo 
+-- izquierdo o derecho lo aplico a todos los nodos de la lista
+foldAG f (NodoAG a as) = f a (map (foldAG f) as)
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="programacion_funcional.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="unidad_2.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="programacion_funcional.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="unidad_2.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="mermaid.min.js"></script>
+        <script src="mermaid-init.js"></script>
+        <script src="theme/pagetoc.js"></script>
+
+
+    </div>
+    </body>
+</html>
