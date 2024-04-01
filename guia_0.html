@@ -179,6 +179,189 @@
                 <div id="content" class="content">
                     <main><div class="sidetoc"><nav class="pagetoc"></nav></div>
                         <h1 id="guia-0---repaso-haskell"><a class="header" href="#guia-0---repaso-haskell">Guia 0 - Repaso Haskell</a></h1>
+<h2 id="ejercicio-1"><a class="header" href="#ejercicio-1">Ejercicio 1</a></h2>
+<p>Dar el tipo y describir el comportamiento de las siguientes funciones del módulo <code>Prelude</code> de Haskell:</p>
+<p>Hago un par nomás (recomiendo primero jugar un poco con las funciones y si no les queda claro pueden usar <code>:doc NOMBRE_DE_LA_FUNCIÓN</code>):</p>
+<ul>
+<li><code>null</code>:</li>
+</ul>
+<pre><code class="language-haskell">ghci&gt; :type null
+null :: Foldable t =&gt; t a -&gt; Bool
+ghci&gt; null []
+True
+ghci&gt; null [1, 2 , 3]
+False
+</code></pre>
+<p>Devuelve si una estructura está vacía o no</p>
+<ul>
+<li><code>head</code></li>
+</ul>
+<pre><code class="language-haskell">ghci&gt; :type head
+head :: GHC.Stack.Types.HasCallStack =&gt; [a] -&gt; a
+ghci&gt; head []
+*** Exception: Prelude.head: empty list
+CallStack (from HasCallStack):
+  error, called at libraries/base/GHC/List.hs:1646:3 in base:GHC.List
+  errorEmptyList, called at libraries/base/GHC/List.hs:85:11 in base:GHC.List
+  badHead, called at libraries/base/GHC/List.hs:81:28 in base:GHC.List
+  head, called at &lt;interactive&gt;:9:1 in interactive:Ghci3
+ghci&gt; head [1, 2]
+1
+</code></pre>
+<p>Devuelve el primer elemento de una lista</p>
+<ul>
+<li><code>take</code></li>
+</ul>
+<pre><code class="language-haskell">ghci&gt; :type take
+take :: Int -&gt; [a] -&gt; [a]
+ghci&gt; take 3 [1, 2 , 3, 4]
+[1,2,3]
+ghci&gt; take 3 [1, 2]
+[1,2]
+ghci&gt; take 3 []
+[]
+</code></pre>
+<p>Recibe un número <code>n</code> y una lista, y devuelve los primeros <code>n</code> elementos de dicha lista.</p>
+<ul>
+<li><code>!!</code></li>
+</ul>
+<pre><code class="language-haskell">ghci&gt; :type (!!)
+(!!) :: GHC.Stack.Types.HasCallStack =&gt; [a] -&gt; Int -&gt; a
+ghci&gt; [1, 2, 3, 4] !! 2
+3
+ghci&gt; [1, 2, 3, 4] !! 3
+4
+ghci&gt; [1, 2, 3, 4] !! 0
+1
+</code></pre>
+<p>Es el operador de indexado.</p>
+<h2 id="ejercicio-2"><a class="header" href="#ejercicio-2">Ejercicio 2</a></h2>
+<p>Definir las siguientes funciones:</p>
+<ul>
+<li><code>valorAbsoluto :: Float -&gt; Float</code> que dado un número devuelve su valor absoluto.</li>
+</ul>
+<pre><code class="language-haskell">valorAbsoluto :: Float -&gt; Float
+valorAbsoluto = abs
+</code></pre>
+<ul>
+<li><code>bisiesto :: Int -&gt; Bool</code> que dado un número que representa un año, indica si el mismo es bisiesto.</li>
+</ul>
+<pre><code class="language-haskell">bisiesto :: Int -&gt; Bool
+bisiesto anio | mod anio 4 == 0 = True
+              | otherwise       = False
+</code></pre>
+<ul>
+<li><code>factorial :: Int -&gt; Int</code> definida únicamente para enteros positivos, que computa el factorial.</li>
+</ul>
+<pre><code class="language-haskell">factorial :: Int -&gt; Int
+factorial 1 = 1
+factorial n = n * factorial (n-1)
+</code></pre>
+<ul>
+<li><code>cantDivisoresPrimos :: Int -&gt; Int</code>, que dado un entero positivo devuelve la cantidad de divisores primos</li>
+</ul>
+<pre><code class="language-haskell">valorAbsoluto :: Float -&gt; Float
+valorAbsoluto = abs
+
+bisiesto :: Int -&gt; Bool
+bisiesto anio | mod anio 4 == 0 = True
+              | otherwise       = False
+
+factorial :: Int -&gt; Int
+factorial 1 = 1
+factorial n = n * factorial (n-1)
+
+cantDivisoresPrimos :: Int -&gt; Int
+cantDivisoresPrimos n = cantDivisoresPrimosMenoresA n n
+
+cantDivisoresPrimosMenoresA :: Int -&gt; Int -&gt; Int
+cantDivisoresPrimosMenoresA _ 1 = 0
+cantDivisoresPrimosMenoresA n divisorCandidato | esPrimo divisorCandidato &amp;&amp; mod n divisorCandidato == 0 = 1 + divisoresMenores
+                                               | otherwise                   = divisoresMenores
+                                              where divisoresMenores = cantDivisoresPrimosMenoresA n (divisorCandidato - 1)
+
+esPrimo :: Int -&gt; Bool
+esPrimo n = cantDivisoresMenoresA n n == 2
+
+cantDivisoresMenoresA :: Int -&gt; Int -&gt; Int
+cantDivisoresMenoresA _ 1 = 1
+cantDivisoresMenoresA n divisorCandidato | mod n divisorCandidato == 0 = 1 + divisoresMenores
+                                         | otherwise                   = divisoresMenores
+                                         where divisoresMenores = cantDivisoresMenoresA n (divisorCandidato - 1)
+</code></pre>
+<h3 id="ejercicio-3"><a class="header" href="#ejercicio-3">Ejercicio 3</a></h3>
+<p>Contamos con los tipos <code>Maybe</code> y <code>Either</code> definidos como sigue:</p>
+<pre><code class="language-haskell">data Maybe a = Nothing | Just a
+data Either a b = Left a | Right b
+</code></pre>
+<ul>
+<li>Definir la función <code>inverso :: Float -&gt; Maybe Float</code> que dado un número devuelve su inverso multiplicativo si está definido, o <code>Nothing</code> en caso contrario.</li>
+</ul>
+<pre><code class="language-haskell">inverso :: Float -&gt; Maybe Float
+inverso 0.0 = Nothing
+inverso x = Just (1.0 / x)
+</code></pre>
+<ul>
+<li>Definir la función <code>aEntero :: Either Int Bool -&gt; Int</code> que convierte a entero una expresión que puede ser booleana o entera. En el caso de los booleanos, el entero que corresponde es 0 para <code>False</code> y 1 para <code>True</code>.</li>
+</ul>
+<pre><code class="language-haskell">aEntero :: Either Int Bool -&gt; Int
+aEntero (Left unEntero) = unEntero
+aEntero (Right True) = 1
+aEntero (Right False) = 0
+</code></pre>
+<h3 id="ejercicio-4"><a class="header" href="#ejercicio-4">Ejercicio 4</a></h3>
+<p>Definir las siguientes funciones sobre listas:</p>
+<ul>
+<li><code>limpiar :: String -&gt; String -&gt; String</code>, que elimina todas las apariciones de cualquier carácter de la primera cadena en la segunda. Por ejemplo, <code>limpiar "susto" "puerta"</code> evalúa a <code>"pera"</code>. Nota: <code>String</code> es un renombre de <code>[Char]</code>. La notación <code>"hola"</code> es equivalente a <code>['h', 'o', 'l', 'a']</code> y a <code>'h':'o':'l':'a':[]</code></li>
+</ul>
+<pre><code class="language-haskell">limpiar :: String -&gt; String -&gt; String
+limpiar [] fromStr = fromStr 
+limpiar (unChar:restoDelPatron) fromStr = limpiar restoDelPatron (filter (/= unChar) fromStr) 
+</code></pre>
+<ul>
+<li><code>difPromedio :: [Float] -&gt; [Float]</code> que dada una lista de números devuelve la diferencia de cada uno con el promedio general. Por ejemplo, <code>difPromedio [2, 3, 4]</code> evalúa a <code>[-1, 0, 1]</code>.</li>
+</ul>
+<pre><code class="language-haskell">difPromedio :: [Float] -&gt; [Float]
+difPromedio xs = map (\x -&gt; x - promedioXs) xs
+              where promedioXs = promedio xs
+
+promedio :: [Float] -&gt; Float
+promedio [] = 0.0
+promedio xs = sum xs / fromIntegral (length xs)
+</code></pre>
+<ul>
+<li><code>todosIguales :: [Int] -&gt; Bool</code> que indica si una lista de enteros tiene todos sus elementos iguales.</li>
+</ul>
+<pre><code class="language-haskell">todosIguales :: [Int] -&gt; Bool
+todosIguales [] = True
+todosIguales (x:xs) = all (== x) xs
+</code></pre>
+<h3 id="ejercicio-5"><a class="header" href="#ejercicio-5">Ejercicio 5</a></h3>
+<p>Dado el siguiente modelo para árboles binarios:</p>
+<pre><code class="language-haskell">data AB a = Nil | Bin (AB a) a (AB a)
+</code></pre>
+<p>definir las siguientes funciones:</p>
+<ul>
+<li><code>vacioAB :: AB a -&gt; Bool</code> que indica si un árbol es vacío (i.e. no tiene nodos)</li>
+</ul>
+<pre><code class="language-haskell">vacioAB :: AB a -&gt; Bool
+vacioAB Nil = True
+vacioAB _ = False
+</code></pre>
+<ul>
+<li><code>negacionAB :: AB bool -&gt; AB Bool</code> que dado un árbol de booleanos construye otro formulado por la negación de cada uno de los nodos.</li>
+</ul>
+<pre><code class="language-haskell">negacionAB :: AB Bool -&gt; AB Bool
+negacionAB Nil = Nil
+negacionAB (Bin (hijoIzq) nodo (hijoDer)) = Bin (negacionAB hijoIzq) (not nodo) (negacionAB hijoDer)
+</code></pre>
+<ul>
+<li><code>productoAB :: AB Int -&gt; Int</code> que calcula el producto de todos los nodos del árbol</li>
+</ul>
+<pre><code class="language-haskell">productoAB :: AB Int -&gt; Int
+productoAB Nil = 1
+productoAB (Bin hijoIzq nodo hijoDer) = productoAB hijoIzq * nodo * productoAB hijoDer
+</code></pre>
 
                     </main>
 
