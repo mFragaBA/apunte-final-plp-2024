@@ -294,7 +294,7 @@ $$
 - Por último, una regla que se encargue del reemplazo de la evaluación
 
 $$
-\frac{M_2 \rightarrow M_2'}{\apply{(\lf{x}{\sigma}{M})}{V} \rightarrow M \\{x \leftarrow V\\}} (E-AppAbs / \beta)
+\frac{}{\apply{(\lf{x}{\sigma}{M})}{V} \rightarrow M \\{x \leftarrow V\\}} (E-AppAbs / \beta)
 $$
 
 - Esto último quiere decir agarrar la función lambda, y reemplazar sintácticamente las ocurrencias de \\(x\\) por \\(V\\)
