@@ -1177,7 +1177,7 @@ $$</p>
 <li>Por último, una regla que se encargue del reemplazo de la evaluación</li>
 </ul>
 <p>$$
-\frac{M_2 \rightarrow M_2'}{\apply{(\lf{x}{\sigma}{M})}{V} \rightarrow M \{x \leftarrow V\}} (E-AppAbs / \beta)
+\frac{}{\apply{(\lf{x}{\sigma}{M})}{V} \rightarrow M \{x \leftarrow V\}} (E-AppAbs / \beta)
 $$</p>
 <ul>
 <li>Esto último quiere decir agarrar la función lambda, y reemplazar sintácticamente las ocurrencias de \(x\) por \(V\)
@@ -1292,7 +1292,577 @@ reducción infinitas a partir de él.</p>
 que reducir. Luego por preservación de tipos, aplicar la reducción nos dice
 que el nuevo término está bien tipado, y sigue siendo cerrado.</p>
 </blockquote>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="cálculo-lambda-tipado-extendido"><a class="header" href="#cálculo-lambda-tipado-extendido">Cálculo Lambda Tipado Extendido</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><p>$$
+\newcommand{\lcb}{\lambda^b}
+\newcommand{\lce}{\lambda^{bn}}
+\newcommand{\lcr}{\lambda^{\dots n}}
+\newcommand{\lcu}{\lambda^{bnu}}
+\newcommand{\lclet}{\lambda^{\dots let}}
+\newcommand{\ifLC}[3]{if\  {#1}\  then\  {#2}\  else\  {#3}}
+\newcommand{\lf}[3]{\lambda{#1}:\ {#2}.{#3}}
+\newcommand{\apply}[2]{{#1}\ {#2}}
+\newcommand{\hastype}[3]{{#1} \triangleright {#2}: {#3}}
+\newcommand{\tzero}[1]{\frac{}{\hastype{\Gamma}{0}{Nat}}  (T-Zero)}
+\newcommand{\tsucc}[2]{\frac{\hastype{#1}{#2}{Nat}}{\hastype{\Gamma}{succ(M)}{Nat}}  (T-Succ)}
+\newcommand{\tpred}[2]{\frac{\hastype{#1}{#2}{Nat}}{\hastype{\Gamma}{pred(M)}{Nat}}  (T-Pred)}
+\newcommand{\tiszero}[2]{\frac{\hastype{#1}{#2}{Nat}}{\hastype{\Gamma}{iszero(M)}{Bool}}  (T-IsZero)}
+\newcommand{\esucc}[2]{\frac{#1 \rightarrow #2}{succ(#1) \rightarrow succ(#2)} (E-Succ)}
+\newcommand{\epredzero}{\frac{}{pred(0) \rightarrow 0} (E-PredZero)}
+\newcommand{\epredsucc}[1]{\frac{}{pred(#1 + 1) \rightarrow #1} (E-PredSucc)}
+\newcommand{\epred}[2]{\frac{#1 \rightarrow #2}{pred(#1) \rightarrow pred(#2)} (E-Pred)}
+\newcommand{\eiszerozero}{\frac{}{iszero(0) \rightarrow true} (E-IsZeroZero)}
+\newcommand{\eiszerosucc}{\frac{}{iszero(n + 1) \rightarrow false} (E-IsZeroSucc)}
+\newcommand{\eiszero}[2]{\frac{#1 \rightarrow #2}{iszero(#1) \rightarrow iszero(#2)} (E-IsZero)}
+$$</p>
+<h1 id="cálculo-lambda-tipado-extendido-lce"><a class="header" href="#cálculo-lambda-tipado-extendido-lce">Cálculo Lambda Tipado Extendido \(\lce\)</a></h1>
+<p>Idea: extendamos \(lcb\) para agregar los números naturales y así darle mayor utilidad.</p>
+<blockquote>
+<p>Nota: esta idea de extender el lenguaje es interesante más allá de lo
+teórico, en la práctica si uno quiere agregar un feature a un lenguaje tiene
+que considerar qué pasos son necesarios para extenderlo.</p>
+</blockquote>
+<h2 id="tipos-y-términos-de-lce"><a class="header" href="#tipos-y-términos-de-lce">Tipos y Términos de \(\lce\)</a></h2>
+<p>Los tipos son:</p>
+<p>$$
+\sigma ::= Bool\ Nat\ \sigma \rightarrow \rho
+$$</p>
+<p>Y los términos son:</p>
+<p>$$
+M ::= \dots | 0 | succ(M) | pred(M) | iszero(M)
+$$</p>
+<p>donde tengo los términos del \(lcb\) usual más los aquí definidos:</p>
+<ul>
+<li>\(succ(M)\): evaluar \(M\) hasta que de un número e incrementarlo.</li>
+<li>\(pred(M)\): evaluar \(M\) hasta que de un número y decrementarlo.</li>
+<li>\(iszero(M)\): evaluar \(M\) hasta que de un número y luego devolver \(true / false\) según sea cero o no.</li>
+</ul>
+<h2 id="reglas-de-tipado-de-lce"><a class="header" href="#reglas-de-tipado-de-lce">Reglas de tipado de \(lce\)</a></h2>
+<p>Junto con las reglas y axiomas previamente definidas para \(lcb\), se le suman:</p>
+<p>$$
+\tzero{\Gamma}
+$$</p>
+<p>$$
+\tsucc{\Gamma}{M}
+$$</p>
+<p>$$
+\tpred{\Gamma}{M}
+$$</p>
+<p>$$
+\tiszero{\Gamma}{M}
+$$</p>
+<h2 id="valores-lce"><a class="header" href="#valores-lce">Valores \(\lce\)</a></h2>
+<p>Valores:</p>
+<p>$$
+V ::= \dots |\ n\ \text{ donde n abrevia } succ^n(0)
+$$</p>
+<p>Esto ya nos da una idea de que si tengo un \(succ(M)\) voy a querer reducir lo de adentro tanto como pueda</p>
+<h2 id="juicio-de-evaluación-en-un-paso-2"><a class="header" href="#juicio-de-evaluación-en-un-paso-2">Juicio de evaluación en un paso</a></h2>
+<p>Ahora le damos la semántica. Igual que para el tipado, usamos las mismas reglas que antes sumando:</p>
+<ul>
+<li>Para succ y pred:</li>
+</ul>
+<p>$$
+\esucc{M_1}{M_1'}
+$$</p>
+<p>$$
+\epredzero
+$$</p>
+<p>$$
+\epredsucc{n}
+$$</p>
+<p>$$
+\epred{M_1}{M_1'}
+$$</p>
+<ul>
+<li>Para iszero:</li>
+</ul>
+<p>$$
+\eiszerozero
+$$</p>
+<p>$$
+\eiszerosucc
+$$</p>
+<p>$$
+\eiszero{M_1}{M_1'}
+$$</p>
+<blockquote>
+<p>Algunas observaciones:</p>
+<ul>
+<li>Tanto \(E-Succ\) y \(E-Pred\) intentan reducir el argumento hasta llevarlo a un valor</li>
+<li>pred además reduce cuando tiene adentro un succ (a pesar de estar en forma normal)</li>
+<li>iszero reduce hasta tener un valor y después hace el chequeo</li>
+</ul>
+</blockquote>
+<h1 id="cálculo-lambda-tipado-extendido-lcr"><a class="header" href="#cálculo-lambda-tipado-extendido-lcr">Cálculo Lambda Tipado Extendido \(\lcr\)</a></h1>
+<h2 id="tipos-1"><a class="header" href="#tipos-1">Tipos</a></h2>
+<p>Podemos pensar a los registros como un struct de C ponele. Incluso más simple,
+es un conjunto de tuplas <strong>ordenado</strong> (nombre, valor).</p>
+<p>Para suponemos que tenemos \(\mathcal{L}\) un conjunto de etiquetas y sumamos el nuevo tipo:</p>
+<p>$$
+\sigma ::= \dots |\ \{l_i : \sigma_i^{i \in 1 \dots n}\}
+$$</p>
+<blockquote>
+<p>Observación: los registros pueden tener subregistros adentro. Por ejemplo:</p>
+</blockquote>
+<h2 id="términos"><a class="header" href="#términos">Términos</a></h2>
+<p>$$
+M ::= \dots |\ \{l_i = M_i^{i \in 1 \dots n}\} |\ M.I
+$$</p>
+<p>Informalmente hablando:</p>
+<ul>
+<li>El registro \(\{l_i = M_i^{i \in 1 \dots n}\}\) evalúa a \(\{l_i = V_i^{i \in 1 \dots n}\}\), donde \(V_i\) es el valor al que evalúa \(M_i\), \(i \in 1 \dots n\).</li>
+<li>\(M.I\), la proyección, consiste en evaluar \(M\) hasta obtener \(\{l_i = V_i^{i \in 1 \dots n}\}\) y luego proyectar al campo correspondiente.</li>
+</ul>
+<p>Algunos ejemplos:</p>
+<p><img src="./img/ejemplo_lcr.png#center" alt="" /></p>
+<ol>
+<li>Dado un \(x\) de tipo \(Nat\) y un \(y\) de tipo \(Bool\), genera un registro donde pongo en \(edad\) a \(x\) y en \(esMujer\) a \(y\).</li>
+<li>Dado un registro que tiene 2 campos, aplica la proyección del campo \(edad\)</li>
+<li>Este último es igual al anterior pero se evalúa en lugar de obtener una función y listo</li>
+</ol>
+<h2 id="reglas-de-tipado"><a class="header" href="#reglas-de-tipado">Reglas de tipado</a></h2>
+<p>$$
+\frac{\Gamma \triangleright M_i : \sigma_i\ \text{para cada } i \in 1 \dots n}{\Gamma \triangleright \{l_i = M_i^{i \in 1 \dots n} \} : \{l_i : \sigma_i^{i \in 1 \dots n}\}} (T-RCD)
+$$</p>
+<p>$$
+\frac{\Gamma \triangleright M_i : \{l_i : \sigma_i^{i \in 1 \dots n}\}\ j \in 1 \dots n}{\Gamma \triangleright M.I_j : \sigma_j} (T-Proj)
+$$</p>
+<h2 id="semántica-operacional-de-lcr"><a class="header" href="#semántica-operacional-de-lcr">Semántica operacional de \(lcr\)</a></h2>
+<h3 id="valores-1"><a class="header" href="#valores-1">Valores</a></h3>
+<p>Agrego los registros como posibles valores (en tanto todos sus elementos sean valores también):</p>
+<p>$$
+V ::= \dots |\ \{l_i = V_i^{i \in 1 \dots n}\}
+$$</p>
+<h3 id="reglas-de-reducción"><a class="header" href="#reglas-de-reducción">Reglas de reducción</a></h3>
+<p>La primer regla nos da la idea de que sí o si tengo que reducir en el orden de las etiquetas:</p>
+<p>$$
+\frac{M_j \rightarrow M_j'}{\{l_i = V_i^{i \in 1 \dots j-1}, l_j = M_j, l_i = M_i^{i \in j+1 \dots n}\} \rightarrow \{l_i = V_i^{i \in 1 \dots j-1}, l_j = M_j', l_i = M_i^{i \in j+1 \dots n}\}} (E-RCD)
+$$</p>
+<p>Luego tenemos las reglas para la proyección:</p>
+<p>$$
+\frac{j \in 1 \dots n}{\{l_i = V_i^{i \in 1 \dots n}\}.l_j \rightarrow V_j} (E-ProjRCD)
+$$</p>
+<p>$$
+\frac{M \rightarrow M'}{M.I \rightarrow M'.I} (E-ProjRCD)
+$$</p>
+<p>O sea que primero reduzco antes de proyectar, y reduzco en el orden de las
+etiquetas. Una vez que llegué a una expresión de registro en forma normal,
+recién ahí hago el reemplazo por el valor correspondiente a la etiqueta.</p>
+<h1 id="cálculo-lambda-tipado-extendido-lcu"><a class="header" href="#cálculo-lambda-tipado-extendido-lcu">Cálculo Lambda Tipado Extendido \(\lcu\)</a></h1>
+<p>Vamos a agregar un nuevo tipo, que se va a comportar similar a lo que es el void en C o C++. A este tipo lo vamos a llamar \(Unit\). No nos importa mucho qué retorna.</p>
+<h2 id="tipos-y-términos-de-lcu"><a class="header" href="#tipos-y-términos-de-lcu">Tipos y términos de \(\lcu\)</a></h2>
+<p>$$
+\sigma ::= Bool\ |\ Nat\ |\ \textbf{Unit}\ |\ \sigma \rightarrow \rho
+$$</p>
+<p>$$
+M ::= \dots\ |\ unit
+$$</p>
+<h2 id="reglas-de-tipado-1"><a class="header" href="#reglas-de-tipado-1">Reglas de tipado</a></h2>
+<p>Se agrega un axioma de tipado:</p>
+<p>$$
+\frac{}{\hastype{\Gamma}{unit}{Unit}}
+$$</p>
+<blockquote>
+<p>Observaciones:</p>
+<ul>
+<li>no se agregan reglas de evaluación nuevas</li>
+<li>Se extiende el conjunto de valores \(V\) con \(unit\):
+$$
+V ::= \dots\ |\ unit
+$$</li>
+</ul>
+</blockquote>
+<h2 id="utilidad-de-unit"><a class="header" href="#utilidad-de-unit">Utilidad de Unit</a></h2>
+<ul>
+<li>El principal uso es en lenguajes que tienen side effects.</li>
+<li>En dichos lenguajes es útil poder evaluar varias expresiones secuencialmente. Entonces definimos:</li>
+</ul>
+<p>$$
+M_1;M_2 \stackrel{def}{=} \apply{(\lf{x}{Unit}{M_2})}{M_1}\ \ \ x \notin FV(M_2)
+$$</p>
+<ul>
+<li>La evaluación de \(M_1;M_2\) consiste en nprimero evaluar \(M_1\) y luego \(M_2\).</li>
+<li>Bajo esta definición, el comportamiento se da con las reglas de evaluación ya existentes.</li>
+</ul>
+<blockquote>
+<p><em>Obs</em>: por ahora nuestro lenguaje no tiene side effects, ya vamos a llegar a eso.</p>
+</blockquote>
+<h1 id="cálculo-lambda-tipado-extendido-lclet"><a class="header" href="#cálculo-lambda-tipado-extendido-lclet">Cálculo Lambda Tipado Extendido \(\lclet\)</a></h1>
+<p>En este caso, vamos a agregar una feature que no introduce tipos, y tampoco
+introduce mecanismos de ejecución necesariamente pero si aporta legibilidad. Es
+el equivalente en cálculo lambda del <code>f = ... where ...</code> de haskell.</p>
+<h2 id="términos-1"><a class="header" href="#términos-1">Términos</a></h2>
+<p>$$
+M ::= \dots\ |\ let\ x : \sigma = M\ in\ N
+$$</p>
+<p>La idea es evaluar \(M\) hasta un valor \(V\), ligamos \(x\) a \(V\) y evaluamos \(N\). Algunos ejemplos:</p>
+<ul>
+<li><code>let x: Nat = 2 in succ(x)</code></li>
+<li><code>pred (let x: Nat = 2 in x)</code></li>
+<li><code>let f: Nat -&gt; Nat = \x: Nat.succ(n) in f(f(0))</code></li>
+<li><code>let x: Nat = 2 in let x: Nat = 3 in x</code></li>
+</ul>
+<h2 id="tipado"><a class="header" href="#tipado">Tipado</a></h2>
+<p>Si bien no agregamos tipos, si tenemos una regla de tipado:</p>
+<p>$$
+\frac{\hastype{\Gamma}{M}{\sigma_1}\ \ \ \hastype{\Gamma,\ x:\sigma_1}{N}{\sigma_2}}{\hastype{\Gamma}{let\ x: \sigma_1 = M\ in\ N}{\sigma_2}} (T-Let)
+$$</p>
+<blockquote>
+<p><strong>Obs</strong>: la regla tiene un aire a \(T-Abs\)</p>
+</blockquote>
+<h2 id="semántica-operacional-de-lclet"><a class="header" href="#semántica-operacional-de-lclet">Semántica operacional de \(\lclet\)</a></h2>
+<p>Tenemos 2 reglas, una para reducir y otra cuando llego a un valor:</p>
+<p>$$
+\frac{M_1 \rightarrow M_1'}{let\ x: \sigma = M_1\ in\ M_2 \rightarrow let\ x: \sigma = M_1'\ in\ M_2} (E-Let)
+$$</p>
+<p>$$
+\frac{}{let\ x: \sigma = V_1\ in\ M_2 \rightarrow \apply{M_2}{\{x \leftarrow V_1\}}} (E-LetV)
+$$</p>
+<h2 id="interpretando-el-let"><a class="header" href="#interpretando-el-let">Interpretando el <code>let</code></a></h2>
+<p>En una expresión como <code>let x: Nat = 2 in M</code>:</p>
+<ul>
+<li>x se declara con el valor 2</li>
+<li>x es inalterado a lo largo de la evaluación de M</li>
+<li>en este sentido x es <strong>inmutable</strong>. No hay operación de asignación</li>
+</ul>
+<p>Lo siguiente es agregar variables <strong>mutables</strong> (casi que estamos saliendo del terreno del lenguaje funcional y metiéndonos en el terreno del lenguaje mutable)</p>
+<h1 id="cálculo-lambda-con-variables-mutables"><a class="header" href="#cálculo-lambda-con-variables-mutables">Cálculo Lambda con variables mutables</a></h1>
+<p>Vamos a agregar algunas operaciones básicas:</p>
+<ul>
+<li>Reserva de memoria (allocation): \(ref M\) genera una referencia fresca cuyo contenido es el valor de \(M\).</li>
+<li>Desreferenciación (lectura): \(!x\) sigue la referencia \(x\) y retorna su contenido.</li>
+<li>Asignación: \(x := M\) almacena en la referencia \(x\) el valor de \(M\).</li>
+</ul>
+<div id="admonition-algunos-ejemplos" class="admonition admonish-example">
+<div class="admonition-title">
+<p>Algunos Ejemplos</p>
+<p><a class="admonition-anchor-link" href="lambda_calc_extendido.html#admonition-algunos-ejemplos"></a></p>
+</div>
+<div>
+<p>(Nota: se omiten los tipos de las expreciones para facilitar la lectura, perdemos algo de formalismo. Sepan comprender)</p>
+<ul>
+<li><code>let x = ref 2 in !x</code> evalúa a 2</li>
+<li><code>let x = ref 2 in (\_: Unit.!x) (x := succ(!x))</code> evalúa a 3 (es lo mismo que
+hacer <code>x := succ(!x); !x</code>)</li>
+<li><code>let x = 2 in x</code> evalúa a 2</li>
+<li><code>let x = ref 2 in x</code> a qué evalúa? A priori no sabemos (todavía no vimos qué
+devuelve un <code>ref 2</code>)</li>
+<li><code>let x = ref 2 in let y = x in (\_: Unit.!x) (y := succ(!y))</code> evalúa a 3.
+Primero reemplaza el y por la referencia, y después es igual al segundo
+ejemplo. Obtuve en este caso un alias a la celda de memoria.</li>
+</ul>
+<p><strong>Obs</strong>: x sigue <strong>siendo inmutable</strong> pero en los primeros 2 casos lo que es inmutable es la referencia a la memoria, no su contenido.</p>
+</div>
+</div>
+<h2 id="comandos"><a class="header" href="#comandos">Comandos</a></h2>
+<p>Pregunta: el término <code>let x = ref 2 in x := succ(!x)</code>, a qué evalúa? En la operación de asignación sólo interesa el efecto que tiene, por lo tanto la definimos como que evalúa a \(unit\). Esto es lo que conocemos como <strong>comando</strong></p>
+<h2 id="formalizando"><a class="header" href="#formalizando">Formalizando</a></h2>
+<h3 id="expresiones-de-tipos-1"><a class="header" href="#expresiones-de-tipos-1">Expresiones de tipos</a></h3>
+<div style="float:right;margin-left:2rem;margin-bottom:1rem;margin-top:-6rem;width:330px">
+<div id="admonition-achievement-unlocked" class="admonition admonish-success">
+<div class="admonition-title">
+<p>Achievement Unlocked</p>
+<p><a class="admonition-anchor-link" href="lambda_calc_extendido.html#admonition-achievement-unlocked"></a></p>
+</div>
+<div>
+<p>Wow, ya desbloqueamos los punteros a funciones!</p>
+<p><img src="./img/function_pointer.png" alt="" /></p>
+</div>
+</div>
+</div>
+<p>\(Ref \sigma\) va a ser el tipo de las referencias a valores de tipo \(\sigma\). O sea \(Ref (Bool \rightarrow Nat)\) es el tipo de las referencias a funciones de \(Bool\) en \(Nat\).</p>
+<p>$$
+\sigma ::= Bool\ |\ Nat\ |\ \sigma \rightarrow \tau\ |\ Unit\ |\ Ref \sigma
+$$</p>
+<h3 id="términos-2"><a class="header" href="#términos-2">Términos</a></h3>
+<p>$$
+M ::= \dots\ |\ ref\ M\ |\ !M\ |\ M := N\ |\ l
+$$</p>
+<div style="width:330px">
+<blockquote>
+<p>Nota: por ahora ignorar el último término pero es el que corresponde a las
+referencias propiamente dichas (idealemente no se exponen al "programador"
+pero en la maquinaria lógica hay que tenerlas en consideración)</p>
+</blockquote>
+</div>
+<h3 id="reglas-de-tipado-2"><a class="header" href="#reglas-de-tipado-2">Reglas de tipado</a></h3>
+<p>El tipo de la referencia es una referencia al tipo del término:</p>
+<p>$$
+\frac{\hastype{\Gamma}{M_1}{\sigma}}{\hastype{\Gamma}{ref\ M_1}{Ref\ \sigma}} (T-Ref)
+$$</p>
+<p>El tipo de la desreferencia es el tipo interno de la referencia:</p>
+<p>$$
+\frac{\hastype{\Gamma}{M_1}{Ref\ \sigma}}{\hastype{\Gamma}{!M_1}{\sigma}} (T-DeRef)
+$$</p>
+<p>Por último, el tipo de una asignación es siempre unit y además el tipo de la variabla tiene que ser una referencia del tipo que se está asignando:</p>
+<p>$$
+\frac{\hastype{\Gamma}{M_1}{Ref\ \sigma_1}\ \ \hastype{\Gamma}{M_2}{\sigma_1}}{\hastype{\Gamma}{M_1 := M_2}{Unit}} (T-Assign)
+$$</p>
+<h3 id="semántica"><a class="header" href="#semántica">Semántica</a></h3>
+<p>Al intentar formalizar la semántica operacional surgen 2 preguntas:</p>
+<ul>
+<li>Cuáles son los valores de tipo \(Ref \sigma\)</li>
+<li>Cómo modelo la evaluación del término \(ref M\)</li>
+</ul>
+<p>Para poder responder esto tenemos que responder antes a la pregunta: <em>qué es una referencia</em> (rta: es una abstracción de una porción de memoria que se encuentra en uso).</p>
+<p>Entonces, vamos a tener que modelar la memoria!</p>
+<ul>
+<li>Usamos direcciones simbólicas o "locations" \(l, l_i \in \mathcal{L}\) para representar referencias.</li>
+<li>La memoria o store va a ser una función parcial de direcciones a valores (a.k.a un diccionario).</li>
+<li>Usamos \(\mu, \mu'\) para referirnos a stores</li>
+<li>Notación:
+<ul>
+<li>\(\mu[l \rightarrow V]\) es el store resultante de pisar \(\mu(l)\) con \(V\).</li>
+<li>\(\mu \oplus (l \rightarrow V)\) es el store extendido resultante de ampliar \(\mu\) con una nueva asociación \(l \rightarrow V\) (asumiendo \(l \notin Dom(\mu)\), porque si no hubiese usado la sintáxis de arriba).</li>
+</ul>
+</li>
+<li>Cambia también ligeramente la sintaxis de los juicios de valor:</li>
+</ul>
+<p>$$
+M\ |\ \mu \rightarrow M'\ |\ \mu'
+$$</p>
+<div id="admonition-juicios-de-tipado" class="admonition admonish-note">
+<div class="admonition-title">
+<p>juicios de tipado</p>
+<p><a class="admonition-anchor-link" href="lambda_calc_extendido.html#admonition-juicios-de-tipado"></a></p>
+</div>
+<div>
+<p>Agregar las location nos obliga a agregar nuevas reglas de tipado. En particular, cuál sería el tipo de \(\hastype{\Gamma}{l}{?}\)?</p>
+<ul>
+<li>Depende de qué valores se almacenen en \(l\)</li>
+<li>Tengo un problema similar al de las variables libres</li>
+<li>Tenemos que introducir entonces un <strong>contexto de tipado</strong> para direcciones \(\Sigma\)</li>
+</ul>
+<p>Nuevo formato de los juicios de tipado:</p>
+<p>$$
+\hastype{\Gamma | \Sigma}{M}{\sigma}
+$$</p>
+<p>Y Nueva regla de tipado:</p>
+<p>$$
+\frac{\Sigma(l) = \sigma}{\hastype{\Gamma | \Sigma}{l}{Ref \sigma}} (T-Loc)
+$$</p>
+</div>
+</div>
+<h4 id="valores-2"><a class="header" href="#valores-2">Valores</a></h4>
+<p>Además de los ya existentes, incluimos las direcciones al conjunto de valores:</p>
+<p>$$
+V ::= \dots\ |\ unit\ |\ \lf{x}{\sigma}{M}\ |\ l
+$$</p>
+<h4 id="operaciones-de-reducción-en-un-paso"><a class="header" href="#operaciones-de-reducción-en-un-paso">Operaciones de reducción en un paso</a></h4>
+<p>Reglas para ref:</p>
+<p>$$
+\frac{M_1\ |\ \mu \rightarrow M_1'\ |\ \mu' \rightarrow}{(ref\ M_1 | \mu) \rightarrow ref\ M_1' | \mu} (E-RefV)
+$$</p>
+<p>$$
+\frac{l \notin Dom(\mu)}{(ref V\ | \mu) \rightarrow (l | \mu \oplus (l \rightarrow V))} (E-RefV)
+$$</p>
+<p>Reglas para la desreferenciación:</p>
+<p>$$
+\frac{M_1 | \mu \rightarrow M_1' | \mu'}{!M_1 | \mu \rightarrow !M_1' | \mu} (E-Deref)
+$$</p>
+<p>$$
+\frac{\mu(l) = V}{!l | \mu \rightarrow V | u} (E-DerefLoc)
+$$</p>
+<p>Las reglas para la asignación:</p>
+<p>Dejo evolucionar el lado de la etiqueta:</p>
+<p>$$
+\frac{M_1\ |\ \mu \rightarrow M_1'\ |\ \mu'}{M_1 := M_2\ |\ \mu \rightarrow M_1' := M_2\ |\ \mu' } (E-Assign1)
+$$</p>
+<p>Cuando llegué al valor evalúo lo que se asigna:</p>
+<p>$$
+\frac{M_2\ |\ \mu \rightarrow M_2'\ |\ \mu'}{V := M_2\ |\ \mu \rightarrow V := M_2'\ |\ \mu' } (E-Assign2)
+$$</p>
+<p>Por último, la evaluación se reduce a \(unit\),  pero la memoria se modifica:</p>
+<p>$$
+\frac{}{l := V\ |\ \mu \rightarrow unit\ |\ \mu[l \rightarrow V] } (E-Assign)
+$$</p>
+<h2 id="revisitando-reglas-de-evaluación-viejas"><a class="header" href="#revisitando-reglas-de-evaluación-viejas">Revisitando reglas de evaluación viejas</a></h2>
+<p>Como ahora tenemos el store, tenemos que actualizar todas las reglas previas.
+Veamos un par de ejemplos de la aplicación pero en general la regla es la misma
+y lo único que hay que reflejar es si el store puede cambiar o no.</p>
+<p>$$
+\frac{M_1\ |\ \mu \rightarrow M_1'\ |\ \mu'}{\apply{M_1}{M_2}\ |\ \mu \rightarrow \apply{M_1'}{M_2}\ |\ \mu'} (E-App1)
+$$</p>
+<p>$$
+\frac{M_2\ |\ \mu \rightarrow M_2'\ |\ \mu'}{\apply{V_1}{M_2}\ |\ \mu \rightarrow \apply{V_1}{M_2'}\ |\ \mu'} (E-App2)
+$$</p>
+<p>Notar que para cuando hacemos la aplicación, al ser un reemplazo sintáctico el store no cambia:</p>
+<p>$$
+\frac{}{\apply{(\lf{x}{\sigma}{M})}{V}\ |\ \mu \rightarrow M \{x \leftarrow V\}\ |\ \mu} (E-AppAbs)
+$$</p>
+<h2 id="the-last-crusade-corrección-de-sistema-de-tipos"><a class="header" href="#the-last-crusade-corrección-de-sistema-de-tipos">The last crusade: Corrección de sistema de tipos</a></h2>
+<p>Como vimos para \(\lcb\), podíamos asegurar dos características que eran:</p>
+<ul>
+<li>progreso: si \(M\) es cerrado y bien tipado entonces o bien es un valor o
+se puede reducir a un término \(M'\)</li>
+<li>preservación: si \(M\) es de tipo \(\sigma\) bajo el contexto
+\(\Gamma\), y se reduce a otro término \(N\), entonces ese nuevo término
+también va a ser de tipo \(\sigma\). O sea que la reducción preserva tipos.</li>
+</ul>
+<p>Tenemos que poder reformular estas propiedades en el marco del lambda cálculo
+tipado con referencias (y registros y otras cosas, aunque lo relevante son las
+referencias).</p>
+<div id="admonition-primer-intento" class="admonition admonish-warning">
+<div class="admonition-title">
+<p>Primer intento</p>
+<p><a class="admonition-anchor-link" href="lambda_calc_extendido.html#admonition-primer-intento"></a></p>
+</div>
+<div>
+<p>Qué pasa con la siguiente formulación?</p>
+<blockquote>
+<p>Si \(\hastype{\Gamma | \Sigma}{M}{\sigma}\) y \(M\ |\ \mu \rightarrow M'\ |\ \mu'\) entonces \(\hastype{\Gamma | \Sigma}{M'}{\sigma}\)</p>
+</blockquote>
+<p>El problema que tenemos con esto es que la semántica puede no respetar los tipos asumidos para las direcciones (o sea \(\sigma\))</p>
+<p>Por ejemplo, supongamos que:</p>
+<ul>
+<li>\(M = !l \)</li>
+<li>\(\Gamma = \emptyset \)</li>
+<li>\(\Sigma(l) = Nat \)</li>
+<li>\(\mu(l) = true \)</li>
+</ul>
+<p>Esto ya de por si es raro porque significaría que nuestro tipo dice que tenemos
+un \(Nat\) pero guardamos un valor booleano. Pero bueno, no está restringido
+en lo que enunciamos.</p>
+<p>Observar que:</p>
+<ul>
+<li>\(\hastype{\Gamma | \Sigma}{M}{Nat} \) y</li>
+<li>\(M\ |\ \mu \rightarrow true\ |\ \mu \)</li>
+<li>pero \(\hastype{\Gamma | \Sigma}{true}{Nat}\) no vale</li>
+</ul>
+<p>Lo importante es la <strong>coordinación entre el contexto de tipado</strong> \(\Sigma\) <strong>y el valor en el store durante la evaluación</strong> \(\mu\)</p>
+</div>
+</div>
+<h3 id="reformulando-preservación"><a class="header" href="#reformulando-preservación">Reformulando preservación</a></h3>
+<p>Tenemos que hablar de compatibilidad / coordinación entre el store y el
+contexto de tipado para stores (se podría pensar que "tipamos" los stores).</p>
+<p>Para eso intrducimos un nuevo "juicio de tiapdo" para el store:</p>
+<p>$$
+\Gamma | \Sigma \triangleright \mu \iff
+$$</p>
+<ul>
+<li>\(Dom(\Sigma) = Dom(\mu)\)</li>
+<li>\(\hastype{\Gamma | \Sigma}{\mu(l)}{\Sigma(l)} \text{ para todo } l \in Dom(\mu)\)</li>
+</ul>
+<p>Con esto definido, podemos reformular la propiedad de preservación:</p>
+<blockquote>
+<p>Si \(\hastype{\Gamma | \Sigma}{M}{\sigma}\) y \(M\ |\ \mu \rightarrow N\ |\ \mu'\) y \(\Gamma | \Sigma \triangleright \mu\) entonces \(\hastype{\Gamma | \Sigma}{N}{\sigma}\)</p>
+</blockquote>
+<p>Pero de vuelta, tenemos que considerar una cosa más. En el paso de evaluación,
+pudo haber cambiado el store. Entonces necesitamos también incluir dicha
+consideración.</p>
+<blockquote>
+<p>Si</p>
+<ul>
+<li>\(\hastype{\Gamma | \Sigma}{M}{\sigma}\)</li>
+<li>\(M\ |\ \mu \rightarrow N\ |\ \mu'\)</li>
+<li>\(\Gamma | \Sigma \triangleright \mu\)</li>
+</ul>
+<p>entonces existe un \(\Sigma' \subseteq \Sigma\) tal que:</p>
+<ul>
+<li>\(\hastype{\Gamma | \Sigma'}{N}{\sigma}\)</li>
+<li>\(\Gamma\ |\ \Sigma' \triangleright \mu'\)</li>
+</ul>
+</blockquote>
+<h3 id="reformulando-progreso"><a class="header" href="#reformulando-progreso">Reformulando progreso</a></h3>
+<p>Si \(M\) es cerrado y bien tipado (es decir, \(\hastype{\emptyset | \Sigma}{M}{\sigma}\)) para algún \Sigma,\sigma) entonces:</p>
+<ul>
+<li>\(M\) es un valor (o sea el store quedó fijo)</li>
+<li>o bien para cualquier store \(\mu\) tal que \(\emptyset | \Sigma \rightarrow \mu\), existe \(M'\) y \(\mu'\) tal que \(M\ |\ \mu \rightarrow M'\ |\ \mu'\) (o sea que puedo haber cambiado el store)</li>
+</ul>
+<h3 id="ejemplos"><a class="header" href="#ejemplos">Ejemplos</a></h3>
+<p><img src="./img/eval_example_with_references.png#center" alt="" /></p>
+<p><img src="./img/eval_example_with_references_2.png#center" alt="" /></p>
+<p><img src="./img/eval_example_with_references_3.png#center" alt="" /></p>
+<div id="admonition-opa-opa-opa" class="admonition admonish-warning">
+<div class="admonition-title">
+<p>Opa Opa Opa...</p>
+<p><a class="admonition-anchor-link" href="lambda_calc_extendido.html#admonition-opa-opa-opa"></a></p>
+</div>
+<div>
+<p>En ese último ejemplo me quedo en un loop infinito de evaluaciones. En
+\(\lambda^{bnr}\) (lambda cálculo con booleanos, naturales y referencias) no
+todo término cerrado y bien tipado termina.</p>
+</div>
+</div>
+<h2 id="recursión"><a class="header" href="#recursión">Recursión</a></h2>
+<p>Algo común en funcional es tener definiciones de funciones recursivas.
+Intentemos extender el \(\lambda\)-cálculo para soportarlo. Para eso tenemos
+que introducir un nuevo término:</p>
+<p>$$
+M ::= \dots\ |\ fix\ M
+$$</p>
+<p>Y si bien no se precisan nuevos tipos, si se necesita una regla de tipado nueva:</p>
+<p>$$
+\frac{\hastype{\Gamma}{M}{\sigma_1 \rightarrow \sigma_1}}{\hastype{\Gamma}{fix\ M}{\sigma_1}} (T-Fix)
+$$</p>
+<blockquote>
+<p>Obs: sólo le puedo pasar funciones cuyo dominio y codominio coincidan, y \(fix M\) tiene el mismo tipo que el codominio.</p>
+</blockquote>
+<h3 id="semántica-operacional"><a class="header" href="#semántica-operacional">Semántica operacional</a></h3>
+<p>No hay valores nuevos pero se suman 2 reglas de evaluación.</p>
+<blockquote>
+<p>Nota: si bien es posible, acá dejamos de considerar la parte de cálculo
+lambda con efectos y referencias</p>
+</blockquote>
+<p>Primero reduzco todo lo que pueda lo de adentro del fix</p>
+<p>$$
+\frac{M_1 \rightarrow M_1'}{fix\ M_1 \rightarrow fix\ M_1'} (E-Fix)
+$$</p>
+<p>Luego hago el reemplazo como cuando hacía la evaluación de una lambda. Pero ojo, <strong>lo reemplazo por el fix entero</strong>.</p>
+<p>$$
+\frac{}{fix\ \lf{x}{\sigma}{M} \rightarrow M \{x \leftarrow fix\ \lf{x}{\sigma}{M}\}} (E-FixBeta)
+$$</p>
+<h3 id="mecanismo-de-escape"><a class="header" href="#mecanismo-de-escape">Mecanismo de escape</a></h3>
+<p>Dada la semántica operacional de \(fix\), se va a evaluar tanto como sea
+necesario. Pero a priori puede seguir de forma infinita. Entonces necesitamos
+alguna herramienta que nos de control respecto a cuándo cortar. Una posibilidad
+es usar un if-else-then. Veamos un ejemplo de eso:</p>
+<p>Sea M el término:</p>
+<pre><code>\f: Nat -&gt; Nat. 
+    \x: Nat. if iszero(x) then 1 else x * f(pred(x))
+</code></pre>
+<p>en</p>
+<pre><code>let fact = fix M in fact 3
+</code></pre>
+<p>Veamos cómo se reduce:</p>
+<pre><code>let fact = fix M in fact 3
+let fact = \x: Nat. if iszero(x) then 1 else x * (fix M)(pred(x)) in fact 3
+\x: Nat. if iszero(x) then 1 else x * (fix M)(pred(x)) 3
+if iszero(3) then 1 else 3 * (fix M)(pred(3))
+3 * (\x: Nat. if iszero(x) then 1 else x * (fix M)(pred(x)))(pred(3))
+3 * (\x: Nat. if iszero(x) then 1 else x * (fix M)(pred(x)))(2)
+3 * (if iszero(2) then 1 else 2 * (fix M)(pred(2))))
+3 * (2 * (fix M)(pred(2)))
+3 * (2 * (\x: Nat. if iszero(x) then 1 else x * (fix M)(pred(x)))(pred(2)))
+3 * (2 * (\x: Nat. if iszero(x) then 1 else x * (fix M)(pred(x)))(1))
+3 * (2 * iszero(1) then 1 else 1 * (fix M)(pred(1)))
+3 * (2 * 1 * (fix M)(pred(1)))
+3 * (2 * 1 * (fix M)(0))
+3 * (2 * 1 * (\x: Nat. if iszero(x) then 1 else x * (fix M)(pred(x)))(0))
+3 * (2 * 1 * if iszero(0) then 1 else 0 * (fix M)(pred(0)))
+3 * (2 * 1 * 1)
+...
+6
+</code></pre>
+<p>Obs: el término M tiene tipo <code>(Nat-&gt;Nat) -&gt; (Nat-&gt;Nat)</code>, con lo cual el fix va
+a ser de tipo <code>Nat-&gt;Nat</code>. De alguna forma podemos pensar que la f sirve para
+llamar a la recursión de la función y la x es el parámetro del llamado actual.</p>
+<h3 id="más-ejemplos"><a class="header" href="#más-ejemplos">Más ejemplos</a></h3>
+<ul>
+<li>Podemos definir funciones parciales:</li>
+</ul>
+<pre><code>fix (\x: Nat.succ x) 
+-&gt; succ (fix (\x: Nat.succ x)) 
+-&gt; succ (succ (fix (\x: Nat.succ x)))
+-&gt; ...
+</code></pre>
+<h2 id="letrec"><a class="header" href="#letrec">letrec</a></h2>
+<p>A modo de sintactic sugar definimos:</p>
+<pre><code>letrec f: t -&gt; t = \x : t.M in N
+</code></pre>
+<p>El letrec se puede re-escribir usando let con:</p>
+<pre><code>let f = fix (\f : t -&gt; t. \x: t.M) in N
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="inferencia-de-tipos"><a class="header" href="#inferencia-de-tipos">Inferencia de tipos</a></h1>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="subtipado"><a class="header" href="#subtipado">Subtipado</a></h1>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="unidad-3---programación-funcional"><a class="header" href="#unidad-3---programación-funcional">Unidad 3 - Programación Funcional</a></h1>
