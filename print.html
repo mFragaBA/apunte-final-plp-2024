@@ -1863,7 +1863,377 @@ llamar a la recursión de la función y la x es el parámetro del llamado actual
 <p>El letrec se puede re-escribir usando let con:</p>
 <pre><code>let f = fix (\f : t -&gt; t. \x: t.M) in N
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="inferencia-de-tipos"><a class="header" href="#inferencia-de-tipos">Inferencia de tipos</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><p>$$
+\newcommand{\lft}[2]{\lambda{#1}.{#2}}
+\newcommand{\lf}[3]{\lambda{#1}:\ {#2}.{#3}}
+\newcommand{\ifLC}[3]{if\  {#1}\  then\  {#2}\  else\  {#3}}
+\newcommand{\apply}[2]{{#1}\ {#2}}
+\newcommand{\hastype}[3]{{#1} \triangleright {#2}: {#3}}
+\newcommand{\inference}[1]{\mathbb{W}(#1)}
+$$</p>
+<h1 id="inferencia-de-tipos"><a class="header" href="#inferencia-de-tipos">Inferencia de tipos</a></h1>
+<p>Queremos resolver el problema de recibir términos sin información de tipos o
+con información de tipos parcial en términos tipables. Para eso es necesario
+<strong>inferir</strong> la información de tipos que falta.</p>
+<p>En lenguajes tipados esto permite obviar algunas declaraciones de tipos (e.g
+Haskell, Rust, etc.), esto puede resultar en código más simple de entender
+(menos complejidad), y no afecta el tiempo de ejecución porque esto se puede
+hacer en tiempo de compilación.</p>
+<h2 id="punto-de-partida"><a class="header" href="#punto-de-partida">Punto de partida</a></h2>
+<p>Primero vamos a modificar la sintaxis de los términos del \(\lambda\)-cálculo
+eliminando toda anotación de tipos (el único lugar donde teníamos era en la
+lambda). O sea la función lambda pasa a ser: \(\lft{x}{M}\). A ese conjunto
+de términos lo denotamos \(\Lambda\).</p>
+<p>Para formalizar esto, vamos a usar la función \(Erase(.):\ \Lambda_{\tau} \rightarrow \Lambda\) que elimina las anotiaciones de tipos. Por ejemplo:</p>
+<p>$$
+Erase(\lf{x}{Nat}{\lf{f}{Nat\ \rightarrow Nat}{\apply{f}{x}}}) = \lft{x}{\lft{f}{\apply{f}{x}}}
+$$</p>
+<h2 id="definición-formal-del-problema-de-la-inferencia"><a class="header" href="#definición-formal-del-problema-de-la-inferencia">Definición formal del problema de la inferencia</a></h2>
+<p>Dado \(U\) un término sin anotaciones de tipo, encontrar un término con anotaciones de tipos \(M\) tal que:</p>
+<ol>
+<li>\(\hastype{\Gamma}{M}{\sigma}\) para algún \(\Gamma\) y \(\sigma\), y</li>
+<li>\(Erase(M) = U\)</li>
+</ol>
+<h3 id="ejemplos-1"><a class="header" href="#ejemplos-1">Ejemplos</a></h3>
+<ul>
+<li>\(U = \lft{x}{succ(x)}\), \(\lf{x}{Nat}{succ(x)}\) (en este caso no hay otra posibilidad)</li>
+<li>\(U = \lft{x}{\lft{f}{\apply{f}{x}}}\) tomamos \(M_{\sigma,\tau} = \lf{x}{\sigma}{\lf{f}{\sigma \rightarrow \tau}{\apply{f}{x}}}\) (notar que en este caso hay un \(M_{\sigma,\tau}\) por cada par \(\sigma,\tau\))</li>
+<li>Si \(U = \apply{x}{x}\), en principio no tenemos un término \(M\) que satisfaga la propiedad.</li>
+</ul>
+<div id="admonition-chequeo--inferencia" class="admonition admonish-warning">
+<div class="admonition-title">
+<p>Chequeo != Inferencia</p>
+<p><a class="admonition-anchor-link" href="inferencia_de_tipos.html#admonition-chequeo--inferencia"></a></p>
+</div>
+<div>
+<p>Es importante poder diferenciar un problema de otro. El problema del chequeo de
+tipos es que dado un término \(M\) tengo que determinar si existe un contexto
+\(\Gamma\) y un tipo \(\sigma\) tales que \(\hastype{\Gamma}{M}{\sigma}\)
+es derivable.</p>
+<ul>
+<li>esto es muuuuuucho más fácil que el problema de inferencia, ya que está todo guiado por sintáxis</li>
+<li>de hecho, la forma para chequear eso es seguir la estructura sintáctica para construir una derivación del juicio de tipado.</li>
+<li>es escencialmente lo mismo a que ya te den el \(\Gamma\) y el \(\sigma\) y veas si \(\hastype{\Gamma}{M}{\sigma}\) es derivable.</li>
+</ul>
+</div>
+</div>
+<h2 id="variables-de-tipo"><a class="header" href="#variables-de-tipo">Variables de tipo</a></h2>
+<p>Supongamos que tenemos \(U = \lft{x}{\lft{f}{\apply{f}{x}}}\). Entonces dijimos que para cada \(\sigma\) tengo definido un \(M_{\sigma} = \lf{x}{\sigma}{\lf{f}{\sigma \rightarrow \sigma}{\apply{f}{x}}}\). Y cada uno de esos es una solución posible al problema de la inferencia.</p>
+<p>Entonces, estaría bueno tener una forma de agrupar todas esas soluciones en una sola. Para eso, podríamos representar a todas las soluciones con \(\lf{x}{s}{\lf{f}{s \rightarrow s}{\apply{f}{x}}}\</p>
+<ul>
+<li>\(s\) no es un tipo en si mismo si no que es una variable de tipos.</li>
+<li>la expresión no es una solución en si misma, pero la substitución de \(s\)
+por cualquier expresióin de tipos si nos da una solución.</li>
+</ul>
+<h2 id="extensión-de-las-expresiones-de-tipo"><a class="header" href="#extensión-de-las-expresiones-de-tipo">Extensión de las expresiones de tipo</a></h2>
+<p>$$
+\sigma ::= s\ |\ Nat\ |\ Bool\ |\ \sigma \rightarrow \tau
+$$</p>
+<ul>
+<li>Denotamos con \(\mathcal{V}\) al conjunto de variables de tipo.</li>
+<li>Denotamos con \(\mathcal{T}\) al conjunto de tipos definidos como arriba.</li>
+</ul>
+<h2 id="sustitución-de-tipos"><a class="header" href="#sustitución-de-tipos">Sustitución de tipos</a></h2>
+<p>Vamos a definir una función de sustitución que mapea variables de tipo en
+expresiones de tipo \(\mathcal{S}: \mathcal{V} \rightarrow \mathcal{T}\).
+Sólo nos interesan las \(\mathcal{S}\) tales que \(\{t \in \mathcal{V}\ |\ St \neq t\}\)
+es finito (Es un detalle técnico, lo importante es que no queremos que reemplace infinitas variables)</p>
+<p>Además, vamos a querer poder aplicar \(S\) a varias cosas:</p>
+<ul>
+<li>expresiones de tipos (dado \(\sigma\), escribimos \(S\sigma\))</li>
+<li>un término cualquiera (dado \(M\) escribimos \(SM\))</li>
+<li>un contexto de tipado (dado \(\Gamma = \{x_1: \sigma_1, \dots, x_n: \sigma_n\}\) escribimos \(S\Gamma\) definido como:)</li>
+</ul>
+<p>$$
+S\Gamma = \{x_1: S\sigma_1, \dots, x_n: S\sigma_n\}
+$$</p>
+<p>Algunas consideraciones extra:</p>
+<ul>
+<li>Llamamos <strong>soporte de</strong> \(S\) a \(\{t\ |\ St \neq t\}\)</li>
+<li>El soporte representa las variables que \(S\) "afecta".</li>
+<li>Usamos la notación \(\{\sigma_1/t_1, \dots, \sigma_n/t_n\}\) para la sustitución con soporte \(\{t_1, \dots, t_n\}\)
+<ul>
+<li>los \(\sigma_i\) es la cosa por la que reemplazo a los Ts</li>
+</ul>
+</li>
+<li>La sustitución con soporte \(\emptyset\) es la sustitución identidad y la notamos \(Id\)</li>
+</ul>
+<h2 id="juicio-de-tipado-instanciado"><a class="header" href="#juicio-de-tipado-instanciado">Juicio de tipado instanciado</a></h2>
+<p>Dado un juicio de tipado original \(\hastype{\Gamma}{M}{\sigma}\), hablamos del juicio de tipado instanciado \(\hastype{\Gamma'}{M'}{\sigma'}\) al resultante de aplicarle una sustitución \(S\) al juicio original (en caso de existir tal \(S\). Esto es equivalente a que existe \(S\) tal que:</p>
+<p>$$
+S\Gamma \subseteq \Gamma', M' = SM, \sigma' = S\sigma
+$$</p>
+<blockquote>
+<p><strong>Propiedad</strong>: si \(\hastype{\Gamma}{M}{\sigma}\) es derivable, entonces cualquier instancia del mismo juicio de tipado lo es.</p>
+</blockquote>
+<h2 id="función-de-inferencia-inference"><a class="header" href="#función-de-inferencia-inference">Función de inferencia \(\inference{.}\)</a></h2>
+<p>Es una función que dado un término \(U\) sin anotaciones verifica:</p>
+<ul>
+<li>Corrección: \(\inference{U} = \hastype{\Gamma}{M}{\sigma}\) implica
+<ul>
+<li>\(Erase(M) = U\)</li>
+<li>\(\hastype{\Gamma}{M}{\sigma}\) es derivable</li>
+</ul>
+</li>
+<li>Completitud: Si \(\hastype{\Gamma}{M}{\sigma}\) es derivable y \(Erase(M) = U\), entonces
+<ul>
+<li>\(\inference{U}\) tiene éxito (si existe lo tiene que encontrar)</li>
+<li>produce un juicio \(\hastype{\Gamma'}{M'}{\sigma'}\) tal que \(\hastype{\Gamma}{M}{\sigma}\) es instancia del mismo (se dice que \(\inference{.}\)) <strong>computa un tipo principal</strong>. (capaz no encuentra exactamente el mismo término o al menos va a encontrar algo del que mi juicio original sea instancia. O sea que el algoritmo te va a dar la versión más general)</li>
+</ul>
+</li>
+</ul>
+<h3 id="algoritmo-de-inferencia-casos-bases"><a class="header" href="#algoritmo-de-inferencia-casos-bases">Algoritmo de inferencia (casos bases)</a></h3>
+<p>$$
+\begin{align}
+\inference{0} &amp;\stackrel{def}{=} \hastype{\emptyset}{0}{Nat} \\
+\inference{true} &amp;\stackrel{def}{=} \hastype{\emptyset}{true}{Bool} \\
+\inference{false} &amp;\stackrel{def}{=} \hastype{\emptyset}{false}{Bool} \\
+\inference{x} &amp;\stackrel{def}{=} \hastype{\{x: s\}}{x}{s}, x \text{ variable fresca}
+\end{align}
+$$</p>
+<h3 id="algoritmo-de-inferencia-caso-succ"><a class="header" href="#algoritmo-de-inferencia-caso-succ">Algoritmo de inferencia (caso succ)</a></h3>
+<p>$$
+\inference{succ(U)} \stackrel{def}{=} ?
+$$</p>
+<ul>
+<li>Sea \(\inference{U} = \hastype{\Gamma}{M}{\tau}\) ("aplico hipótesis inductiva")</li>
+<li>Tenemos que saber si \(\tau\) puede ser un \(Nat\)</li>
+</ul>
+<div id="admonition-unificación" class="admonition admonish-info">
+<div class="admonition-title">
+<p>Unificación</p>
+<p><a class="admonition-anchor-link" href="inferencia_de_tipos.html#admonition-unificación"></a></p>
+</div>
+<div>
+<p>Al igual que arriba, me puedo encontrar casos en donde tengo que saber si una
+expresión de tipos es compatible o unificable con otra. Dicho proceso implica
+determinar si existe una sustitución \(S\) tal que las expresiones de tipos
+(ponele que son \(\sigma\) y \(\tau\)) son unificables (o sea \(S\sigma =
+S\tau\))</p>
+<p>Por ejemplo, el tipo \(s \rightarrow t\) es unificable con \(Nat \rightarrow u\)?</p>
+<ul>
+<li>puedo armar una sustitución que tome \(s\) y lo transforme en \(Nat\), y agarre \(t\) y lo transforme en \(u\)</li>
+<li>en este caso la estructura lo facilita también, pero se puede replicar para otras expresiones</li>
+</ul>
+</div>
+</div>
+<h2 id="propiedades-de-sustituciones"><a class="header" href="#propiedades-de-sustituciones">Propiedades de sustituciones</a></h2>
+<ul>
+<li>La composición de sustituciones es equivalente a la composición de funciones. Ejemplo:</li>
+</ul>
+<p><img src="./img/sust_composicion.png#center" alt="" /></p>
+<ul>
+<li>Decimos que \(S = T\) si tienen el mismo soporte y \(St = Tt\) para todo \(t\) del soporte.</li>
+<li>la identidad no afecta en la composición</li>
+<li>la composición es asociativa</li>
+<li>decimos que una sustitución \(S\) es <strong>más general</strong> que \(T\) si existe \(U\) tal que \(T = U \circ S\)
+<ul>
+<li>\(S\) es más general que \(T\) porque \(T\) se obtiene instanciando \(S\)</li>
+<li>Ej: una sustitución que reemplaza \(s\) por \(t \rightarrow t\) es más general que otra que la reemplaza por \(Nat \rightarrow Nat\)</li>
+</ul>
+</li>
+</ul>
+<h2 id="unificador"><a class="header" href="#unificador">Unificador</a></h2>
+<p>Una <strong>expresión de unificación</strong> es algo de la forma <code>expr1 = expr2</code>. Una sustitución es una solución de un conjunto de ecuaciones de unificación \(\{\sigma_1 = \sigma_1', \dots, \sigma_n = \sigma_n'\}\) si \(S\sigma_1 = S\sigma_1', \dots, S\sigma_n = S\sigma_n'\)</p>
+<p>Veamos unos ejemplos:</p>
+<ul>
+<li>La sustitución \(\{Bool/v, Bool \times Nat/u\}\) es solución de \{v \times Nat \rightarrow Nat = u \rightarrow Nat\}
+<ul>
+<li>\(\{Bool \times Bool/v, (Bool \times Bool) \times Nat/u\}\) también es solución, pero es un poco más compleja.</li>
+<li>\(\{v \times Nat/u\}\) también... y de hecho es más simple... más <strong>GENERAL</strong>.</li>
+</ul>
+</li>
+<li>\(\{Nat \rightarrow s = t \times u\}\) no tiene solución porque no puedo matchear la función con un producto interno.</li>
+<li>\(\{u \rightarrow Nat = u\}\) no tiene solución porque cualquier cosa por la que reemplace a \(u\) me queda distinto.</li>
+</ul>
+<h3 id="unificador-más-general-mgu"><a class="header" href="#unificador-más-general-mgu">Unificador más general (MGU)</a></h3>
+<p>Retomemos eso de la solución simple y <strong>más general</strong>. Una sustitución \(S\) es un MGU de \(\{\sigma_1 = \sigma_1', \dots, \sigma_n = \sigma_n'\}\) si:</p>
+<ol>
+<li>es solución del conjunto de ecuaciones</li>
+<li>es más general que cualquier otra solución</li>
+</ol>
+<p>En el ejemplo anterior \(\{v \times Nat/u\}\) era la MGU.</p>
+<h3 id="algoritmo-de-unificación"><a class="header" href="#algoritmo-de-unificación">Algoritmo de unificación</a></h3>
+<p>Sabiendo que vale el siguiente teorema:</p>
+<blockquote>
+<p>Si \(\{\sigma_1 = \sigma_1', \dots, \sigma_n = \sigma_n'\}\) tiene solución, entonces existe MGU y es único salvo por renombre de variables</p>
+</blockquote>
+<p>Vamos a armar un algoritmo que cumple:</p>
+<ul>
+<li>entrada:
+<ul>
+<li>conjunto de ecuaciones de unificación</li>
+</ul>
+</li>
+<li>salida:
+<ul>
+<li>MGU del conjunto, si tiene solución</li>
+<li>falla en caso contrario</li>
+</ul>
+</li>
+</ul>
+<h3 id="algoritmo-de-martelli-montanari"><a class="header" href="#algoritmo-de-martelli-montanari">Algoritmo de Martelli-Montanari</a></h3>
+<ul>
+<li>es no determinístico (defino reglas para aplicar pero no hay un orden específico establecido)</li>
+<li>consiste en reglas de simplificación, que simplifican conjuntos de pares de tipos a unificar (goals)</li>
+</ul>
+<p>$$
+G_0 \rightarrow G_1 \rightarrow \dots \rightarrow G_n
+$$</p>
+<ul>
+<li>las secuencias que terminan con el goal vacío son las existosas. El resto
+fallan</li>
+<li>algunos pasos usan una substitución que representa una solución parcial, pero
+si la secuencia es exitosa basta con componer todas las substituciones y
+obtenemos el MGU.</li>
+</ul>
+<h4 id="reglas-del-algoritmo"><a class="header" href="#reglas-del-algoritmo">Reglas del algoritmo</a></h4>
+<ol>
+<li>Descomposición
+<ul>
+<li>\(\{\sigma_1 \rightarrow \sigma_2 = \tau_1 \rightarrow \tau_2\} \cup G \rightarrow \{\sigma_1 = \tau_1, \sigma_2 = \tau2\} \cup G\) (igualdad de funciones se descompone en igualdad de cada tipo de la función)</li>
+<li>\(\{Nat = Nat\} \cup G \rightarrow G\)</li>
+<li>\(\{Bool = Bool\} \cup G \rightarrow G\)</li>
+</ul>
+</li>
+<li>Eliminación de par trivial
+<ul>
+<li>\(\{s = s\} \cup G \rightarrow G\)</li>
+</ul>
+</li>
+<li>Swap: si \(\sigma\) no es una variable
+<ul>
+<li>\(\{\sigma = s\} \cup G \rightarrow \{s = \sigma\} \cup G\) (es un paso intermedio para usar la regla 4)</li>
+</ul>
+</li>
+<li>Eliminación de variable: si \(s \notin FV(\sigma)\)
+<ul>
+<li>\(\{s = \sigma\} \cup G \rightarrow_{\{\sigma/s\}} \{\sigma/s\}G \) (el objetivo de la regla es eliminar la restricción)</li>
+</ul>
+</li>
+<li>Colisión
+<ul>
+<li>\(\{\sigma = \tau\} \cup G \rightarrow falla\), con \((\sigma, \tau) \in T \cup T^{-1}\) (las permutaciones de matchear Bool, Nat o función) y \(T = \{(Bool, Nat), (Nat, \sigma_1 \rightarrow \sigma_2), (Bool, \sigma_1 \rightarrow \sigma_2)\}\)</li>
+</ul>
+</li>
+<li>Occur check: si \(s \neq \sigma\) y \(s \in FV(\sigma)\)
+<ul>
+<li>\(\{s = \sigma\} \cup G \rightarrow falla\) (es como el ejemplo de \(s = s \rightarrow Nat\) que habíamos visto antes)</li>
+</ul>
+</li>
+</ol>
+<div id="admonition-ejemplo" class="admonition admonish-example">
+<div class="admonition-title">
+<p>Ejemplo</p>
+<p><a class="admonition-anchor-link" href="inferencia_de_tipos.html#admonition-ejemplo"></a></p>
+</div>
+<div>
+<p><img src="./img/ejemplo_montanari.png#center" alt="" /></p>
+<p>Notar que aplicamos 3 sustituciones. Armemos el MGU que es:</p>
+<p>$$
+\{Nat \rightarrow (s \rightarrow s)/u\} \circ \{s \rightarrow s/r\} \circ \{Nat \rightarrow r/t\} = \\
+\{Nat \rightarrow (s \rightarrow s)/t, s \rightarrow s/r, Nat \rightarrow (s \rightarrow s)/u\}
+$$</p>
+</div>
+</div>
+<h4 id="propiedades-del-algoritmo-teorema"><a class="header" href="#propiedades-del-algoritmo-teorema">Propiedades del algoritmo (Teorema)</a></h4>
+<ul>
+<li>El algoritmo siempre termina</li>
+<li>Sea \(G\) un conjunto de pares. Si tiene unificador, entonces el algoritmo de Martelli-Montanari termina exitosamente y devuelve un MGU. Y si no tiene  el algoritmo termina con \(falla\)</li>
+</ul>
+<h3 id="volviendo-a-succ"><a class="header" href="#volviendo-a-succ">Volviendo a Succ</a></h3>
+<p>$$
+\inference{succ(U)} \stackrel{def}{=} ?
+$$</p>
+<ul>
+<li>Sea \(\inference{U} = \hastype{\Gamma}{M}{\tau}\) ("aplico hipótesis inductiva")</li>
+<li>Sea \(S = MGU\{\tau = Nat\}\)</li>
+</ul>
+<p>Entonces:</p>
+<p>$$
+\inference{succ(U)} \stackrel{def}{=} \hastype{S\Gamma}{S\ succ(M)}{Nat}
+$$</p>
+<blockquote>
+<p>Nota: \(pred\) es similar</p>
+</blockquote>
+<h3 id="algoritmo-de-inferencia-caso-iszero"><a class="header" href="#algoritmo-de-inferencia-caso-iszero">Algoritmo de inferencia (caso iszero)</a></h3>
+<ul>
+<li>Sea \(\inference{U} = \hastype{\Gamma}{M}{\tau}\)</li>
+<li>Sea \(S = MGU\{\tau = Nat\}\)</li>
+</ul>
+<p>Entonces:</p>
+<p>$$
+\inference{iszero(U)} \stackrel{def}{=} \hastype{S\Gamma}{S\ iszero(M)}{Bool}
+$$</p>
+<h3 id="algoritmo-de-inferencia-caso-ifthenelse"><a class="header" href="#algoritmo-de-inferencia-caso-ifthenelse">Algoritmo de inferencia (caso ifThenElse)</a></h3>
+<ul>
+<li>Sea \(\inference{U} = \hastype{\Gamma_1}{M}{\rho}\)</li>
+<li>Sea \(\inference{V} = \hastype{\Gamma_2}{P}{\sigma}\)</li>
+<li>Sea \(\inference{W} = \hastype{\Gamma_3}{Q}{\tau}\)</li>
+<li>Sea \(S = MGU(\{\rho = Bool, \sigma = \tau\} \cup \{\sigma_1 = \sigma_2\ |\ x: \sigma_1 \in \Gamma_i \land x: \sigma_2 \in \Gamma_j, i \neq j\})\)
+<ul>
+<li>el primer conjunto es simplemente forzar que la parte del if sea un booleano y que matcheen los tipos del then y del else para que todo tipe bien.</li>
+<li>la segunda parte es para asegurarte que las variables que reciben un tipo en cada término sean consistentes con el resto (notar que el ifThenElse no liga variables así que no hay que tener mucho cuidado respecto a eso).</li>
+</ul>
+</li>
+</ul>
+<p>Entonces:</p>
+<p>$$
+\inference{\ifLC{U}{V}{W}} \stackrel{def}{=} \hastype{S\Gamma_1 \cup S\Gamma_2 \cup S\Gamma_3}{S\ (\ifLC{M}{P}{Q})}{\sigma}
+$$</p>
+<blockquote>
+<p>Notar que se puede usar tanto \(\tau\) como \(\sigma\) porque ya tenemos la ecuación de unificación que hace que sean iguales.</p>
+</blockquote>
+<h3 id="algoritmo-de-inferencia-caso-aplicación"><a class="header" href="#algoritmo-de-inferencia-caso-aplicación">Algoritmo de inferencia (caso aplicación)</a></h3>
+<ul>
+<li>Sea \(\inference{U} = \hastype{\Gamma_1}{M}{\tau}\)</li>
+<li>Sea \(\inference{V} = \hastype{\Gamma_2}{N}{\rho}\)</li>
+<li>Sea \(S = MGU(\{\tau = \rho \rightarrow t\} \cup \{\sigma_1 = \sigma_2\ |\ x: \sigma_1 \in \Gamma_i \land x: \sigma_2 \in \Gamma_j, i \neq j\})\), con \(t\) una variable fresca.
+<ul>
+<li>el segundo conjunto es el mismo que para el ifThenElse</li>
+<li>el otro es para asegurarnos que \(U\) sea una función que recibe lo que sea que devuelva \(V\).</li>
+</ul>
+</li>
+</ul>
+<p>Entonces:</p>
+<p>$$
+\inference{\apply{U}{V}} \stackrel{def}{=} \hastype{S\Gamma_1 \cup S\Gamma_2}{S(\apply{M}{N})}{St}
+$$</p>
+<h3 id="algoritmo-de-inferencia-caso-abstracción--lambda"><a class="header" href="#algoritmo-de-inferencia-caso-abstracción--lambda">Algoritmo de inferencia (caso abstracción / lambda)</a></h3>
+<ul>
+<li>Sea \(\inference{U} = \hastype{\Gamma}{M}{\rho}\)</li>
+<li>Si el contexto tiene información de tipos para \(x\) (o sea \(x: \tau \in \Gamma\), o lo que es lo mismo, \(x\) no puede tomar cualquier valor), entonces:</li>
+</ul>
+<p>$$
+\inference{\lft{x}{U}} \stackrel{def}{=}  \hastype{\Gamma \setminus \{x: \tau\}}{\lf{x}{\tau}{M}}{\tau \rightarrow \rho}
+$$</p>
+<ul>
+<li>Si no (o sea \(x \notin Dom(\Gamma)\)), elegimos una variable fresca \(s\) y entonces:</li>
+</ul>
+<p>$$
+\inference{\lft{x}{U}} \stackrel{def}{=}  \hastype{\Gamma}{\lf{x}{s}{M}}{s \rightarrow \rho}
+$$</p>
+<blockquote>
+<p>Notar que en este caso sólo le saco cosas al contexto, justamente porque el
+término \(U\) es como dejar "libre" a \(x\), pero en realidad el valor de
+\(x\) va a estar restringido por el tipo que le ligue la función lambda, no
+el contexto.</p>
+</blockquote>
+<h3 id="algoritmo-de-inferencia-caso-fix"><a class="header" href="#algoritmo-de-inferencia-caso-fix">Algoritmo de inferencia (caso \(fix\))</a></h3>
+<ul>
+<li>Sea \(\inference{U} \stackrel{def}{=} \hastype{\Gamma}{M}{\rho}\)</li>
+<li>Recuerdo la regla de tipado de fix:</li>
+</ul>
+<p>$$
+\frac{\hastype{\Gamma}{M}{\sigma_1 \rightarrow \sigma_1}}{\hastype{\Gamma}{fix\ M}{\sigma_1}} (T-Fix)
+$$</p>
+<ul>
+<li>Sea \(S = MGU \{\rho = s \rightarrow s\}\) con \(s\) una variable fresca</li>
+</ul>
+<p>Entonces:</p>
+<p>$$
+\inference{fix(U)} \stackrel{def}{=} \hastype{S\Gamma}{S\ fix(M)}{s}
+$$</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="subtipado"><a class="header" href="#subtipado">Subtipado</a></h1>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="unidad-3---programación-funcional"><a class="header" href="#unidad-3---programación-funcional">Unidad 3 - Programación Funcional</a></h1>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="cálculo-sigma"><a class="header" href="#cálculo-sigma">Cálculo Sigma</a></h1>
