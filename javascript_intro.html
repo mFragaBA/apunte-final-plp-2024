@@ -366,28 +366,13 @@ setX: xValue setY: yValue setColor: aColor
     color  := aColor.
 </code></pre>
 <p>Ahora supongamos que queremos hacer algo similar y definir el objeto <code>BluePoint</code>:</p>
-<p>Supongamos que queremos extender la clase <code>point</code> del siguiente modo:</p>
 <pre><code>Object subclass: #Point
 Métodos de instancia
 setX: xValue setY: yValue
     xCoord := xValue.
     yCoord := yValue.
 
-Point subclass: #ColorPoint
-Métodos de instancia
-setX: xValue setY: yValue setColor: aColor
-    xCoord := xValue.
-    yCoord := yValue.
-    color  := aColor.
-</code></pre>
-<p>Duplico código innecesariamente! En lugar de eso puedo usar <code>super</code>:</p>
-<pre><code>Object subclass: #Point
-Métodos de instancia
-setX: xValue setY: yValue
-    xCoord := xValue.
-    yCoord := yValue.
-
-Point subclass: #ColorPoint
+Point subclass: #BluePoint
 instanceVarNames: 'color'
 Métodos de instancia
 setX: xValue setY: yValue

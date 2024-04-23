@@ -2780,28 +2780,13 @@ setX: xValue setY: yValue setColor: aColor
     color  := aColor.
 </code></pre>
 <p>Ahora supongamos que queremos hacer algo similar y definir el objeto <code>BluePoint</code>:</p>
-<p>Supongamos que queremos extender la clase <code>point</code> del siguiente modo:</p>
 <pre><code>Object subclass: #Point
 Métodos de instancia
 setX: xValue setY: yValue
     xCoord := xValue.
     yCoord := yValue.
 
-Point subclass: #ColorPoint
-Métodos de instancia
-setX: xValue setY: yValue setColor: aColor
-    xCoord := xValue.
-    yCoord := yValue.
-    color  := aColor.
-</code></pre>
-<p>Duplico código innecesariamente! En lugar de eso puedo usar <code>super</code>:</p>
-<pre><code>Object subclass: #Point
-Métodos de instancia
-setX: xValue setY: yValue
-    xCoord := xValue.
-    yCoord := yValue.
-
-Point subclass: #ColorPoint
+Point subclass: #BluePoint
 instanceVarNames: 'color'
 Métodos de instancia
 setX: xValue setY: yValue
@@ -2853,6 +2838,96 @@ otracelda = new Celda ();
 </code></pre>
 <p>Es posible además implementar herencia a través de prototipos (lo veremos más adelante).</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="cálculo-sigma"><a class="header" href="#cálculo-sigma">Cálculo Sigma</a></h1>
+<p>Vamos a ver una formalización del cálculo de objetos (parcial)</p>
+<ul>
+<li>Basada en la formalización de Abadi &amp; Cardelli del 98'</li>
+<li>Basáda en semántica operacional big step (recuerdo: son dar pasos grandes para llegar al resultado)</li>
+<li><strong>No tipado</strong> (y con un aire a funcional)
+<ul>
+<li>En el mismo libro de Abadi&amp;Cardelli dan una versión imperativa</li>
+</ul>
+</li>
+<li>Objetos como única estructura computacional
+<ul>
+<li>son colecciones de atributos (como los registros del funcional)</li>
+<li><strong>todos</strong> los atributos son métodos</li>
+</ul>
+</li>
+<li>Cada método tiene una única variable ligada que representa a <code>self/this</code> y un cuerpo que produce un resultado.</li>
+<li>Los objetos proveen 2 operaciones:
+<ul>
+<li>envío de mensajes</li>
+<li>redefinición de un método (actualizar atributos, a.k.a modificar el estado)</li>
+</ul>
+</li>
+</ul>
+<h2 id="sintaxis"><a class="header" href="#sintaxis">Sintaxis</a></h2>
+<p>$$
+\begin{alignat}{2}
+o,b ::=&amp; x\ &amp;\text{variable} \\
+|&amp;\ [l_i = \zeta(x_i)b_i^i\in{1\dots n}] \ &amp;\text{objeto} \\
+|&amp;\ o.l\ &amp;\text{selección / envío de mensaje} \\
+|&amp;\ o.l \leftarrow \zeta(x)b\ &amp;\text{redefinición de método}
+\end{alignat}
+$$</p>
+<div id="admonition-un-objeto" class="admonition admonish-example">
+<div class="admonition-title">
+<p>Un objeto</p>
+<p><a class="admonition-anchor-link" href="sigma_calc.html#admonition-un-objeto"></a></p>
+</div>
+<div>
+<p>$$
+o \stackrel{def}{=} [l_1 = \zeta(x_1)[],\ l_2 = \zeta(x_2).l_1]
+$$</p>
+<p>\(o\) tiene 2 métodos:</p>
+<ul>
+<li>\(l_1\) retorna un objeto vacío \([]\)</li>
+<li>\(l_2\) es un método que envía el mensaje \(l_1\) a \(\text{self}\) (representado por \(x_2\))</li>
+</ul>
+</div>
+</div>
+<h2 id="atributos-vs-métodos"><a class="header" href="#atributos-vs-métodos">Atributos vs métodos</a></h2>
+<p>El cálculo \(\sigma\) no incluye explícitamente atributos. Peeeeero podemos definir atributos como métodos que no usan \(\text{self}\). En el ejemplo anterior, \(l_1\) era un atributo. De esta forma podemos interpretar que</p>
+<ul>
+<li>un envío de mensaje puede ser la selección de un atributo</li>
+<li>redefinir un método puede ser modificar el atributo</li>
+</ul>
+<p>Para simplificar la notación, tomamos algunos atajos:</p>
+<ul>
+<li>Definición de atributo: \([\dots, l = b, \dots]\) lo usamos como abreviatura de \([\dots, l = \zeta(x)b, \dots]\)</li>
+<li>Asignación de atributo: \(o.l := b\) lo usamos como abreviatura de \(o.l \leftarrow \zeta(x)b\)</li>
+</ul>
+<h2 id="variables-libres-1"><a class="header" href="#variables-libres-1">Variables Libres</a></h2>
+<p>Pdemos ver a \(\zeta\) como el ligador de \(x_i\) en el cuerpo \(b_i\) (similar a como hacíamos con \(\lambda\) en funcional) de la expresión \(\zeta(x_i)b_i\):</p>
+<p>$$
+\begin{align}
+fv(\zeta(x)b) &amp;= fv(b) \setminus \{x\} \\
+fv(x) &amp;= \{x\} \\
+fv([l_i = \zeta(x_i)b_i^i\in{1\dots n}]) &amp;= \bigcup^{i\in1\dots n} fv(\zeta(x_i)b_i) \\
+fv(o.l) &amp;= fv(o) \\
+fv(o.l \leftarrow \zeta(x)b) &amp;= fv(o.l) \cup fv(\zeta(x)b)
+\end{align}
+$$</p>
+<blockquote>
+<p>Duda pendiente: en el último caso no tendría que sacarle las que estuviesen
+libres previamente en \(o.l\) y no estén libres en el método con el que se
+pisa?</p>
+</blockquote>
+<p>Un término se dice <strong>cerrado</strong> si su conjunto de variables libres es vacío.</p>
+<h2 id="sustitución"><a class="header" href="#sustitución">Sustitución</a></h2>
+<p>Asumamos que c es alguna expresión arbitraria.</p>
+<p>$$
+\begin{align}
+x\{c/x\} &amp;= c \\
+y\{c/x\} &amp;= y \text{si} x \neq y \\
+[l_i = \zeta(x_i)b_i^i\in{1\dots n}]\{c/x\} &amp;= [l_i = (\zeta(x_i)b_i)\{c/x\}^i\in{1\dots n}] \\
+o.l\{c/x\} &amp;= (o\{c/x\}).l \\
+(o.l \leftarrow \zeta(x)b)\{c/x\} &amp;= (o.l\{c/x\}) \leftarrow (\zeta(x)b\{c/x\}) \\
+\zeta(y)b\{c/x\} &amp;= \zeta(y')(b\{y'/y\}\{c/x\}) \\
+&amp;\text{si } y' \notin fv(\zeta(y)b) \cup fv(c) \cup \{x\} \\
+\end{align}
+$$</p>
+<p>(Notar que esto es parecido a las alfa conversiones del cálculo lambda)</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="unidad-4---programación-funcional"><a class="header" href="#unidad-4---programación-funcional">Unidad 4 - Programación Funcional</a></h1>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="resolución-proposicional"><a class="header" href="#resolución-proposicional">Resolución Proposicional</a></h1>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="resolución-en-lógica-de-primer-orden"><a class="header" href="#resolución-en-lógica-de-primer-orden">Resolución en lógica de primer orden</a></h1>
