@@ -9,7 +9,7 @@
     - [Inferencia de tipos](./inferencia_de_tipos.md)
     - [Subtipado](./subtipado.md)
 - [Unidad 3 - Paradigma de Objetos](./unidad_3.md)
-    - [Intro a Javascript](./javascript_intro.md)
+    - [Intro a POO](./javascript_intro.md)
     - [Cálculo Sigma](./sigma_calc.md)
 - [Unidad 4 - Programación Lógica](./unidad_4.md)
     - [Resolución Proposicional](./prop_solv.md)
