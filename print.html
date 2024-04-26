@@ -2928,6 +2928,246 @@ o.l\{c/x\} &amp;= (o\{c/x\}).l \\
 \end{align}
 $$</p>
 <p>(Notar que esto es parecido a las alfa conversiones del cálculo lambda)</p>
+<div id="admonition-equivalencia-de-términos" class="admonition admonish-info">
+<div class="admonition-title">
+<p>Equivalencia de términos</p>
+<p><a class="admonition-anchor-link" href="sigma_calc.html#admonition-equivalencia-de-términos"></a></p>
+</div>
+<div>
+<ul>
+<li>Los términos \(\zeta(x)b\) y \(\zeta(y)(b\{y/x\})\) con \(y \notin fv(b)\) se consideran equivalentes (\(\alpha\)-conversión)</li>
+<li>Dos objetos que difieren sólo en el orden de los componentes son equivalentes (vimos algo similar con subtipado de registros). Ej:
+<ul>
+<li>\(o_1 \stackrel{def}{=} [l_1 = \zeta(x_1)[],\ l_2 = \zeta(x_2)x_2.l_1] \)</li>
+<li>\(o_2 \stackrel{def}{=} [l_2 = \zeta(x_2)x_2.l_1,\ l_1 = \zeta(x_1)[]]\)</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<h2 id="semántica-operacional-1"><a class="header" href="#semántica-operacional-1">Semántica operacional</a></h2>
+<p>$$
+v ::= [l_i = \zeta(x_i)b_i^{i\in 1 \dots n}]
+$$</p>
+<ul>
+<li>La semántica operacional es big-step.
+<ul>
+<li>Esto significa que de una expresión vamos <strong>a un valor</strong> en un único paso.</li>
+</ul>
+</li>
+<li>A diferencia de la semántica small-step, no obtengo los detalles de cómo se llega de un estado a otro.</li>
+</ul>
+<p>El caso base de la reducción:</p>
+<p>$$
+\frac{}{v \rightarrow v} [Obj]
+$$</p>
+<p>La regla para la selección:</p>
+<p>$$
+\frac{o \rightarrow v'\ \ \ \ v' \equiv [l_i = \zeta(x_i)b_i^{i \in 1 \dots n}]\ \ \ \ b_j\{v'/x_j\} \rightarrow v\ \ \ \ j \in 1 \dots n}{o.l_j \rightarrow v} [Sel]
+$$</p>
+<p>Si el objeto reduce a un valor, tomo el body correspondiente al índice del
+label seleccionado y al aplicar el reemplazo del self (en ese caso ya el valor
+\(v'\)) reduzco al valor al que reduce la selección.</p>
+<p>Y la regla para el update:</p>
+<p>$$
+\frac{o \rightarrow [l_i = \zeta(x_i)b_i^{i \in 1 \dots n}]\ \ \ \ j \in 1 \dots n}{o.l_j \leftarrow \zeta(x)b \rightarrow [l_j = \zeta(x)b,\ l_i = \zeta(x_i)b_i^{i \in 1 \dots n - \{j\}}]} [Sel]
+$$</p>
+<p>Pido que mi objeto reduzca a algún valor que sea un objeto. Al hacer el update
+queda todo igual salvo la componente \(j\) que es reemplazada por el valor
+que te dan \(\zeta(x)b\)</p>
+<div id="admonition-ejemplos" class="admonition admonish-example">
+<div class="admonition-title">
+<p>Ejemplos</p>
+<p><a class="admonition-anchor-link" href="sigma_calc.html#admonition-ejemplos"></a></p>
+</div>
+<div>
+<p><img src="./img/sigma_reduction.png#center" alt="" /></p>
+<ul>
+<li>Lo desarrollo/expando de abajo para arriba
+<ul>
+<li>Si bien voy de abajo para arriba para demostrar, medio que el a qué reduce no lo conozco al final y después lo voy agregando</li>
+</ul>
+</li>
+<li>Guiado por sintáxis</li>
+</ul>
+<p><img src="./img/sigma_reduction_2.png#center" alt="" /></p>
+<p>Un ejemplo más, qué pasa con \([a = \zeta(x)x.a].a \rightarrow \dots\)? Loop infinito, es parecido al <code>fix \x: sigma.x</code></p>
+</div>
+</div>
+<h1 id="extensiones"><a class="header" href="#extensiones">Extensiones</a></h1>
+<h2 id="naturales"><a class="header" href="#naturales">Naturales</a></h2>
+<ul>
+<li>Vamos a asumir que existen los objetos \(true\) y \(false\) que corresponden a los booleanos.</li>
+<li>Entonces, podemos definir al \(zero\) como:</li>
+</ul>
+<p>$$
+zero \stackrel{def}{=} [ iszero = true,\ pred = \zeta(x)x, succ = \zeta(x)(x.iszero := false).pred := x]
+$$</p>
+<p>Primero marco que ya no soy 0, y después pongo al objeto actual como el predecesor del objeto creado. Con esa definición podemos crear el resto de los números naturales a partir del 0:</p>
+<p>$$
+uno \stackrel{def}{=} zero.succ \rightarrow [iszero = false, pred = zero, succ = \zeta(x)(x.iszero := false).pred := x]
+$$</p>
+<p>Notar que la función <code>succ</code> nunca cambia en realidad, sólo <code>iszero</code> y <code>pred</code>.</p>
+<p>$$
+dos \stackrel{def}{=} uno.succ = zero.succ.succ \rightarrow [iszero = false, pred = uno, succ = \zeta(x)(x.iszero := false).pred := x]
+$$</p>
+<div id="admonition-definiendo-true-y-false" class="admonition admonish-info">
+<div class="admonition-title">
+<p>Definiendo true y false</p>
+<p><a class="admonition-anchor-link" href="sigma_calc.html#admonition-definiendo-true-y-false"></a></p>
+</div>
+<div>
+<p>Una impl suuuuper reducida sería</p>
+<p>$$
+true = [and = f(x)f(y)y, or = f(x)f(y)x] \\
+false = [and = f(x)f(y)x, or = f(x)f(y)y]
+$$</p>
+<p>Pero antes hay que ver cómo hacemos para definir funciones con varios argumentos...</p>
+</div>
+</div>
+<h2 id="funciones-1"><a class="header" href="#funciones-1">Funciones</a></h2>
+<p>Vamos a poder codificar los términos del lambda-cálculo (sin tipado):</p>
+<p>$$
+M\ N\ |\ \lambda x.M\ | x
+$$</p>
+<p>Por qué querría eso? Bueno, como mencionamos en el ejemplo de true y false
+anterior, necesitamos tener funciones con varios argumentos.</p>
+<p>La idea es representar a las funciones como objetos también:</p>
+<p>$$
+[arg = \dots, val = \dots]
+$$</p>
+<ul>
+<li>Al aplicar una función, primero asigno el argumento y después envío el mensaje <code>val</code> para que evalúe el cuerpo de la función.</li>
+<li>Con eso en cuenta, <code>f(v)</code> se traduce en <code>(o_f.arg := o_v).val</code></li>
+</ul>
+<h3 id="función-codificadora-del-cálculo-lambda"><a class="header" href="#función-codificadora-del-cálculo-lambda">Función codificadora del cálculo lambda</a></h3>
+<p>Vamos a definir la codificación del LC en términos de nuestro lenguaje de objetos \(\unicode{x27E6} - \unicode{x27E7} : M \rightarrow a\)</p>
+<p>$$
+\begin{align}
+\unicode{x27E6} x \unicode{x27E7} &amp;\stackrel{def}{=} x \\
+\unicode{x27E6} M\ N \unicode{x27E7} &amp;\stackrel{def}{=} (\unicode{x27E6} M \unicode{x27E7}.arg := \unicode{x27E6} N \unicode{x27E7}).val \\
+\unicode{x27E6} \lambda x.M \unicode{x27E7} &amp;\stackrel{def}{=} [ val = \zeta(y)\unicode{x27E6} M \unicode{x27E7}\{y.arg/x\}, arg = \zeta(y)y.arg ]\ y \notin fv(M) \\
+\end{align}
+$$</p>
+<p>(No se cuelga porque al evaluar voy a pisar el valor de \(arg\))</p>
+<h2 id="métodos-con-parámetros"><a class="header" href="#métodos-con-parámetros">Métodos con parámetros</a></h2>
+<p>Usando el mecanismo de codificación, podemos extender ahora nuestro lenguaje para tener métodos que tomen parámetros además de self:</p>
+<p>$$
+\zeta(y) \unicode{x27E6} \lambda x.M \unicode{x27E7}
+$$</p>
+<p>Hacemos un abuso de notación igual y escribimos:</p>
+<ul>
+<li>\(\lambda x.M\) en lugar de \(\unicode{x27E6} \lambda x.M \unicode{x27E7}\) (ojo, el primer \(\zeta\) lo dejamos así queda claro cuál es el self)</li>
+<li>\(M(N)\) en lugar de \(\unicode{x27E6} M\ N \unicode{x27E7}\)</li>
+</ul>
+<div id="admonition-punto-en-el-plano" class="admonition admonish-example">
+<div class="admonition-title">
+<p>Punto en el plano</p>
+<p><a class="admonition-anchor-link" href="sigma_calc.html#admonition-punto-en-el-plano"></a></p>
+</div>
+<div>
+<pre><code>origen = [
+    x = 0,
+    y = 0,
+    mv_x = self -&gt; \d_x p.x := p.x + d_x,
+    mv_y = self -&gt; \d_y p.y := p.y + d_y
+]
+</code></pre>
+</div>
+</div>
+<h2 id="traits"><a class="header" href="#traits">Traits</a></h2>
+<p>Si usaron lenguajes como Rust, Haskell (Type Classes), Smalltalk se habrán
+topado con traits. Los traits son colecciones de métodos. Otros lenguajes optan
+por usar jerarquías de clases para agrupar funcionalidad pero en este caso el
+trait no lo tengo asociado a un objeto, si no que algunos objetos implementan
+algunos traits.</p>
+<p>Nosotros nos vamos a concentrar en los que tienen la particularidad de que son
+<strong>stateless</strong> o sea que no manejan estado, no usan <code>self</code>.</p>
+<p>Además, puedo combinar traits para generar interfaces más complejas. Por
+ejemplo, puedo armar una función que recibe un parámetro cuya única restricción
+es que implemente el trait <code>PartialEq</code> (que se pueda comparar) y el trait
+<code>Display</code> (que se pueda imprimir en pantalla).</p>
+<p>Un ejemplo de un trait formalizado:</p>
+<p>$$
+\begin{align}
+CompT \stackrel{def}{=} [ &amp;eq = \zeta(t)\lambda(x)\lambda(y)(x.comp(y)) == 0, \\
+&amp;\ lt = \zeta(t)\lambda(x)\lambda(y)(x.comp(y)) &lt; 0]
+\end{align}
+$$</p>
+<blockquote>
+<p>Notar que si bien ambos métodos tienen el \(t\), no lo usa ninguno.</p>
+</blockquote>
+<p>Por una cuestión de notación, omitimos el \(\zeta(t)\)</p>
+<h3 id="constructores-a-partir-de-traits"><a class="header" href="#constructores-a-partir-de-traits">Constructores a partir de traits</a></h3>
+<p>Podemos a partir de un trait \(t = [l_i = \lambda(y_i)b_i^{i \in 1 \dots n}]\) podemos definir un constructor de objetos.</p>
+<p>$$
+new \stackrel{def}{=} \lambda(z)[l_i = \zeta(s)z.l_i(s)^{i \in 1 \dots n}]
+$$</p>
+<p>La idea es que a partir del trait construya un objeto donde el self si importe en las funciones del trait. Veamos qué pasa cuando lo aplico a un trait fijado:</p>
+<p>$$
+\begin{align}
+o &amp;\stackrel{def}{=} new(t) \\
+&amp;= [l_i = \zeta(s)t.l_i(s)^{i \in 1 \dots n}] \\
+&amp;=_{\text{reemplazo t.l_i}} [l_i = \zeta(s)(\lambda(y_i)b_i(s))^{i \in 1 \dots n}] \\
+&amp;= [l_i = \zeta(s)(b_i \{ s / y \})^{i \in 1 \dots n}]
+\end{align}
+$$</p>
+<p>Si usamos de ejemplo a <code>CompT</code> nos quedaría:</p>
+<p><img src="./img/trait_constructor.png#center" alt="" /></p>
+<blockquote>
+<p>Notar que los métodos de 2 parámetros en métodos de 1 (con self bindeados)</p>
+</blockquote>
+<h2 id="clases"><a class="header" href="#clases">Clases</a></h2>
+<p>Con toda esta parafarnalia que vimos antes podemos definir clases dentro de nuestro modelo de objetos. Una clase es un trait que además provee un método <code>new</code>:</p>
+<p>$$
+\begin{align}
+c \stackrel{def}{=} [\ &amp;new = \zeta(z)[l_i = \zeta(s)z.l_i(s)^{i \in 1 \dots n}]], \\
+&amp;l_i = \lambda(s)b_i^{i \in 1 \dots n}]
+\end{align}
+$$</p>
+<blockquote>
+<p>Notar que el new tiene bindeado el self, mientras que los <code>l_i</code> no (o más bien son stateless)</p>
+</blockquote>
+<p>Luego,</p>
+<p>$$
+\begin{align}
+o &amp;\stackrel{def}{=} c.new \\
+&amp;\rightarrow [l_i = \zeta(s)c.l_i(s)^{i \in 1 \dots n}] \\
+&amp;= [l_i = \zeta(s)b_i^{i \in 1 \dots n}]
+\end{align}
+$$</p>
+<div id="admonition-ejemplo-contador" class="admonition admonish-example">
+<div class="admonition-title">
+<p>Ejemplo Contador</p>
+<p><a class="admonition-anchor-link" href="sigma_calc.html#admonition-ejemplo-contador"></a></p>
+</div>
+<div>
+<p><img src="./img/class_contador.png#center" alt="" /></p>
+<p>Notar que el trabajo nuestro debería ser definir el trait de abajo (que de hecho son definir las funciones normales, pero sin bindear self), y lo que va adentro del <code>new</code> es un reemplazo sintáctico</p>
+</div>
+</div>
+<h3 id="herencia-1"><a class="header" href="#herencia-1">Herencia</a></h3>
+<p>Supongamos que tenemos la clase \(c\):</p>
+<p>$$
+\begin{align}
+c \stackrel{def}{=} [\ &amp;new = \zeta(z)[l_i = \zeta(s)z.l_i(s)^{i \in 1 \dots n}]], \\
+&amp;l_i = \lambda(s)b_i^{i \in 1 \dots n}]
+\end{align}
+$$</p>
+<p>Y queremos definir \(c'\) como subclase de \(c\) que agrega los "pre-métodos" \(\lambda(s)b_k^{k \in n+1 \dots n + m}\)</p>
+<p>$$
+\begin{align}
+c \stackrel{def}{=} [\ &amp;new = \zeta(z)[l_i = \zeta(s)z.l_i(s)^{i \in 1 \dots n+m}]], \\
+&amp;l_i = c.l_j^{j \in 1 \dots n} \\
+&amp;l_k = \lambda(s)b_k^{k \in n+1 \dots n+m}]
+\end{align}
+$$</p>
+<ul>
+<li>Los métodos los puedo definir a partir de la clase original</li>
+<li>Los nuevos métodos son simplemente nuevos pre-métodos</li>
+<li>La definición de <code>new</code> no cambia</li>
+</ul>
+<p>También se podrían redefinir pre-métodos (sumo \(l_k\) y descarto los \(l_i\) viejos)</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="unidad-4---programación-funcional"><a class="header" href="#unidad-4---programación-funcional">Unidad 4 - Programación Funcional</a></h1>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="resolución-proposicional"><a class="header" href="#resolución-proposicional">Resolución Proposicional</a></h1>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="resolución-en-lógica-de-primer-orden"><a class="header" href="#resolución-en-lógica-de-primer-orden">Resolución en lógica de primer orden</a></h1>
