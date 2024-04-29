@@ -179,6 +179,78 @@
                 <div id="content" class="content">
                     <main><div class="sidetoc"><nav class="pagetoc"></nav></div>
                         <h1 id="unidad-4---programación-funcional"><a class="header" href="#unidad-4---programación-funcional">Unidad 4 - Programación Funcional</a></h1>
+<p>Hasta ahora vimos:</p>
+<ul>
+<li>Paradigma imperativo:
+<ul>
+<li>estado compuesto por variables.</li>
+<li>tira de instrucciones que cambia el estado (cambia el valor de las
+variables).</li>
+<li>ejecuto una a una a llegar a un estado final</li>
+</ul>
+</li>
+<li>Paradigma funcional
+<ul>
+<li>tenemos expresiones</li>
+<li>las expresiones se reducen en otras expresiones</li>
+<li>así hasta llegar a una forma normal</li>
+</ul>
+</li>
+<li>Paradigma de objetos
+<ul>
+<li>modelo objetos de la realidad</li>
+<li>colaboran mandándose mensajes</li>
+<li>programar es definir objetos, y principalmente qué mensajes responden y
+cómo</li>
+<li>acá el modelo de cómputo es resolver un problema haciendo que los objetos
+definidos se manden mensajes</li>
+</ul>
+</li>
+</ul>
+<p>El <strong>Paradigma funcional</strong> se basa en el uso de la lógica para resolver un
+problema. Para lograrlo, <strong>en lugar de decir el cómo se resuelve nos vamos a
+quedar en el qué</strong>.</p>
+<ul>
+<li>Tenemos un motor que dado el problema especificado con algún tipo de lógica
+(proposicional, primer orden, etc.), va a intentar probarlo como consecuencia
+de hechos (axiomas) y reglas de inferencia.</li>
+<li>tenemos un <strong>goal</strong> que es el objetivo a probar</li>
+<li>es <strong>declarativo</strong> justamente porque no indico cómo se resuelve si no el qué.</li>
+</ul>
+<h2 id="prolog"><a class="header" href="#prolog">Prolog</a></h2>
+<ul>
+<li>Introducido en el 71'</li>
+<li>Los programas se escriben en un subconjunto de la lógica de primer órden
+llamado cláusulas de Hoare.</li>
+<li>El fundamento teórico de fondo es el <strong>método de resolución</strong>. Esto permite
+ver si dado una fórmula es satisfacible o no.</li>
+<li>Programar se va a reducir a especificar el problema en una fórmula (en
+realidad nosotros definimos varias fórmulas pero por atrás se construye una
+única fórmula grande). Y con el método de resolución se va a ver si dicha
+fórmula es satisfacible o no.</li>
+</ul>
+<div id="admonition-ejemplo" class="admonition admonish-example">
+<div class="admonition-title">
+<p>Ejemplo</p>
+<p><a class="admonition-anchor-link" href="#admonition-ejemplo"></a></p>
+</div>
+<div>
+<pre><code class="language-prolog">% Lo de abajo son *Hechos*
+habla(ale, ruso).
+habla(juan, ingles).
+habla(maria, ruso).
+habla(maria, ingles).
+
+% puedo definir predicados paramétricos
+seComunicaCon(X, Y) :- habla(X, L), habla(Y, L), X \= Y.
+
+% ejemplos de goal: "con quién se puede comunicar ale?", "quiénes se pueden comunicar entre sí?"
+seComunicaCon(X, ale)
+seComunicaCon(X, Y)
+</code></pre>
+</div>
+</div>
+<p>Si bien esto es muy interesante, es mejor arrancar con resolución en proposicional.</p>
 
                     </main>
 

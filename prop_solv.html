@@ -178,7 +178,303 @@
 
                 <div id="content" class="content">
                     <main><div class="sidetoc"><nav class="pagetoc"></nav></div>
-                        <h1 id="resolución-proposicional"><a class="header" href="#resolución-proposicional">Resolución Proposicional</a></h1>
+                        <p>$$
+\newcommand{\true}{\mathbf{T}}
+\newcommand{\false}{\mathbf{F}}
+\newcommand{\satisf}{\models}
+\newcommand{\notsatisf}{\nvDash}
+\newcommand{\set}[1]{\lbrace #1 \rbrace}
+$$</p>
+<h1 id="resolución-proposicional"><a class="header" href="#resolución-proposicional">Resolución Proposicional</a></h1>
+<h2 id="repaso-sintaxis-de-la-lógica-proposicional"><a class="header" href="#repaso-sintaxis-de-la-lógica-proposicional">Repaso: Sintaxis de la lógica proposicional</a></h2>
+<p>Dado un conjunto \(\mathcal{V}\) de <strong>variables proposicionales</strong>, podemos
+definir inductivamente el conjunto de <strong>fórmulas proposicionales</strong> <em>Prop</em> de la
+siguiente forma:</p>
+<ol>
+<li>Una variable proposicional \(P_0, P_1, \dots\) es una proposición</li>
+<li>De forma inductiva, decimos que si \(A\) y \(B\) son proposiciones, entonces:
+<ul>
+<li>\(\neg A\) es una proposición.</li>
+<li>\(A \land B\) es una proposición.</li>
+<li>\(A \lor B\) es una proposición.</li>
+<li>\(A \supset B\) es una proposición (esta sería la implicación).</li>
+<li>\(A \iff B\) es una proposición.</li>
+</ul>
+</li>
+</ol>
+<p>Por ejemplo:</p>
+<ul>
+<li>\(A \lor \neg B\)</li>
+<li>\((A \land B) \supset (A \lor A)\)</li>
+</ul>
+<h3 id="semántica"><a class="header" href="#semántica">Semántica</a></h3>
+<blockquote>
+<p>Nota: Acá cuando hablamos de semántica nos referimos a ver si una fórmula es verdadera o falsa.</p>
+</blockquote>
+<ul>
+<li>Una <strong>valuación</strong> es una función \(v: \mathcal{V} \leftarrow \lbrace \true, \false \rbrace \) que le asigna un valor de verdads a cada variable proposicional.</li>
+<li>Fijada una valuación, decimos que la misma <strong>satisface</strong> una proposición \(A\) si \(v \satisf A\), donde también lo definimos inductivamente:</li>
+</ul>
+<p>$$
+\begin{align}
+v \satisf P &amp;\text{ sii } v(P) = \true \\
+v \satisf \not A &amp;\text{ sii } v \notsatisf A \\
+v \satisf A \lor B &amp;\text{ sii } v \satisf A \text{ o } v \satisf B \\
+v \satisf A \land B &amp;\text{ sii } v \satisf A \text{ y } v \satisf B \\
+v \satisf A \supset B &amp;\text{ sii } v \notsatisf A \text{ o } v \satisf B \\
+v \satisf A \iff B &amp;\text{ sii } (v \satisf A \text{ sii } v \satisf B) \\
+\end{align}
+$$</p>
+<h3 id="tautologías-y-satisfactibilidad"><a class="header" href="#tautologías-y-satisfactibilidad">Tautologías y satisfactibilidad</a></h3>
+<p>Decimos que una proposición \(A\) es</p>
+<ul>
+<li><strong>tautología</strong> si independientemente de la valuación es verdadera, o sea \(\forall v \text{ valuación},\ v \satisf A \)
+<ul>
+<li>Ejemplo: \(P \lor \neg P\)</li>
+</ul>
+</li>
+<li><strong>satisfacible</strong> si existe una valuación que satisface a \(A\), o sea \(\exists v \text{ valuación},\ v \satisf A \)
+<ul>
+<li>Ejemplo: \(P\)</li>
+</ul>
+</li>
+<li><strong>insatisfacible</strong> si no existe una valuación que la satisfaga, o sea \(\nexists v \text{ valuación},\ v \satisf A \)
+<ul>
+<li>Ejemplo: \(P \land \neg P\)</li>
+</ul>
+</li>
+</ul>
+<p>Ahora, dado un conjunto de proposiciones \(S\), dimos que es:</p>
+<ul>
+<li><strong>satisfacible</strong> si existe una valuación que esa misma valuación satisface todas las proposiciones de \(S\).
+<ul>
+<li>ej: \(\lbrace P, Q \rbrace\).</li>
+<li>es lo mismo que ver que satisface a la conjunción de todas las proposiciones.</li>
+</ul>
+</li>
+<li><strong>insatisfacible</strong> si no es satisfacible (o sea cualquier valuación tiene una proposición que no satisface).
+<ul>
+<li>ej: \(\lbrace P, \neg P \rbrace\).</li>
+</ul>
+</li>
+</ul>
+<div id="admonition-recuerdo" class="admonition admonish-info">
+<div class="admonition-title">
+<p>Recuerdo</p>
+<p><a class="admonition-anchor-link" href="#admonition-recuerdo"></a></p>
+</div>
+<div>
+<p>Cómo pruebo que una fórmula es una tautología/satisfacible/insatisfacible? Con la tabla de verdad!</p>
+<p>Tautología:</p>
+<div class="table-wrapper"><table><thead><tr><th>A</th><th>A &gt; A</th></tr></thead><tbody>
+<tr><td>T</td><td>T</td></tr>
+<tr><td>F</td><td>T</td></tr>
+</tbody></table>
+</div>
+<p>Satisfacible:</p>
+<div class="table-wrapper"><table><thead><tr><th>A</th><th>B</th><th>(A ^ B)</th></tr></thead><tbody>
+<tr><td>T</td><td>T</td><td>T</td></tr>
+<tr><td>T</td><td>F</td><td>F</td></tr>
+<tr><td>F</td><td>T</td><td>F</td></tr>
+<tr><td>F</td><td>F</td><td>F</td></tr>
+</tbody></table>
+</div>
+<p>insatisfacible:</p>
+<div class="table-wrapper"><table><thead><tr><th>A</th><th>B</th><th>(-A v B)</th><th>(-A v -B)</th><th>(-A v B) ^ (-A v -B) ^ A</th></tr></thead><tbody>
+<tr><td>T</td><td>T</td><td>T</td><td>F</td><td>F</td></tr>
+<tr><td>T</td><td>F</td><td>F</td><td>T</td><td>F</td></tr>
+<tr><td>F</td><td>T</td><td>T</td><td>T</td><td>F</td></tr>
+<tr><td>F</td><td>F</td><td>T</td><td>T</td><td>F</td></tr>
+</tbody></table>
+</div></div>
+</div>
+<h3 id="tautologías-e-insatisfactibilidad"><a class="header" href="#tautologías-e-insatisfactibilidad">Tautologías e insatisfactibilidad</a></h3>
+<p>Tenemos un teorema que nos permite demostrar que algo es insatisfacible viendo que su negación es una tautología (y viceversa).</p>
+<p>(La demo es bastante directa, instanciás las definiciones y reemplazás por \(\satisf\) y \(\notsatisf\) donde corresponda).</p>
+<p>Por qué tiene sentido esto? Bueno, porque en resolución y otros mecanismos suele ser más fácil probar que algo es insatisfacible.</p>
+<h3 id="validez-por-refutación"><a class="header" href="#validez-por-refutación">Validez por refutación</a></h3>
+<p><em>Principio de demostración por refutación</em>:</p>
+<blockquote>
+<p>Probar que \(A\) es <strong>válido</strong> mostrando que \(\neg A\) es <strong>insatisfactible</strong></p>
+</blockquote>
+<p>Hay varias técnicas para demostrar por refutación:</p>
+<ul>
+<li>Tableaux semántico (en LyC usamos este)</li>
+<li>Procedimiento de Davis-Putnam (este suelen usar los SAT-solvers)</li>
+<li>Resolución (vamos a ver este)</li>
+</ul>
+<h2 id="método-de-resolución"><a class="header" href="#método-de-resolución">Método de resolución</a></h2>
+<ul>
+<li>fácil de entender e implementar</li>
+<li>tiene una regla de inferencia llamada <strong>regla de resolución</strong>.</li>
+<li>si bien no es necesario, vamos a trabajar con fórmulas que están en <strong>forma
+normal conjuntiva</strong>. Esto implica que hacemos un reacomodamiento/reescritura
+equivalente de las fórmulas para que tengan una fórma con la que es más fácil
+trabajar.</li>
+</ul>
+<div id="admonition-forma-normal-conjuntiva-fnc" class="admonition admonish-info">
+<div class="admonition-title">
+<p>Forma normal conjuntiva (FNC)</p>
+<p><a class="admonition-anchor-link" href="#admonition-forma-normal-conjuntiva-fnc"></a></p>
+</div>
+<div>
+<ul>
+<li>Un <strong>literal</strong> es una variable proposicional o su negación.</li>
+<li>Una proposición \(A\) está en FNC si es una <strong>conjunción de cláusulas</strong>
+<ul>
+<li>Y cada cláusula es una dusyunción de literales</li>
+</ul>
+</li>
+</ul>
+<p>Entonces la fórmula tiene la pinta:</p>
+<p>$$
+(B_{11} \lor \dots \lor B_{1n_1}) \land \dots \land (B_{m1} \lor \dots \lor B_{mn_m})
+$$</p>
+<p>Donde cada \(B_{ij}\) es \(P\) o \(\neg P\).</p>
+<blockquote>
+<p><strong>QUIZ TIME</strong>: cuáles de las siguientes fórmulas están en FNC?</p>
+<ul>
+<li>\((P \lor Q) \land (P \lor \neg Q)\) ... -&gt; está en FNC.</li>
+<li>\((P \lor Q) \land (P \lor \neg \neg Q)\) ... -&gt; no está en FNC, porque tenemos el \(\neg \neg Q\). Si lo reemplazáramos por \(Q\) nomás ahí si.</li>
+<li>\((P \land Q) \lor P \) ... -&gt; no está en FNC, deberíamos tener una única cláusula (por la disyunción) pero en ese caso el \((P \land Q)\) no es un literal.</li>
+</ul>
+</blockquote>
+</div>
+</div>
+<h3 id="conversión-a-fnc"><a class="header" href="#conversión-a-fnc">Conversión a FNC</a></h3>
+<p>Hay un teorema que nos dice que dada una proposición \(A\) existe una proposición \(A'\) que está en FNC y que es lógicamente equivalente a \(A\).</p>
+<blockquote>
+<p>Nota: por lógicamente equivalente es que \(A \iff B\) es tautología.</p>
+</blockquote>
+<p>La forma de probar el teorema es directamente dar la transformación. Y para
+construir la transformación nos basamos en que tanto \(\lor\) como
+\(\land\) <strong>son conmutativos, asociativos e idempotentes</strong>. Usando las leyes
+de demorgan es transformar la proposición en otra lógicamente equivalente hasta
+llegar a la forma que necesito.</p>
+<p>Además, vamos a hacer 2 asunciones:</p>
+<ul>
+<li>cada cláusula es única</li>
+<li>podemos escribir las cláusulas como conjuntos</li>
+</ul>
+<p>En base a eso, usamos la notación \(\lbrace C_1, \dots, C_n \rbrace\), con cada \(C_i\) un conjunto de literales \(\lbrace B_{i1}, \dots, B_{in_i} \rbrace\). Por ejemplo, la FNC \((P \lor Q) \land (P \lor \neg Q)\) se anota:</p>
+<p>$$
+\lbrace \lbrace P, Q \rbrace, \lbrace P, \neg Q \rbrace \rbrace
+$$</p>
+<p>Para las transformaciones nos vamos a basar en que la siguiente proposición es una tautología:</p>
+<p>$$
+(A \lor P) \land (B \lor \neg P) \iff (A \lor P) \land (B \lor \neg P) \land (A \lor B)
+$$</p>
+<blockquote>
+<p>Demo:</p>
+<p>$$
+\begin{align}
+(A \lor P) \land (B \lor \neg P) &amp;\iff_{\text{agrego termino redundante}} (A \lor P) \land (B \lor \neg P) \land ((A \lor B) \lor \neg (A \lor B)) \\
+&amp;\iff_{distribuyo} ((A \lor P) \land (B \lor \neg P) \land (A \lor B)) \lor \\
+&amp;\ \ \ \ \ \ ((A \lor P) \land (B \lor \neg P) \land (\neg A \land \neg B))
+\end{align}
+$$</p>
+<p>Veamos que ese segundo término es insatisfactible (y como está en un \(\lor\) lo podemos omitir).</p>
+<p>$$
+\begin{align}
+(A \lor P) \land (B \lor \neg P) \land (\neg A \land \neg B) &amp;\iff ((A \lor P) \land \neg A) \land ((B \lor \neg P) \land \neg B) \\
+&amp;\iff_{dist} ((A \land \neg A) \lor (P \land \neg A)) \land ((B \land \neg B) \lor (\neg P \land \neg B)) \\
+&amp;\iff_{reduzco} ((P \land \neg A)) \land ((\neg P \land \neg B)) \\
+&amp;\iff_{saco parent.} P \land \neg P \land \neg A \land \neg B
+\end{align}
+$$</p>
+<p>\(P \land \neg P\) es insatisfactible!!!! Entonces volviendo a arriba:</p>
+<p>$$
+\begin{align}
+(A \lor P) \land (B \lor \neg P) &amp;\iff \dots \\
+&amp;\iff ((A \lor P) \land (B \lor \neg P) \land (A \lor B)) \lor \\
+&amp;\ \ \ \ \ \ ((A \lor P) \land (B \lor \neg P) \land (\neg A \land \neg B)) \\
+&amp;\iff ((A \lor P) \land (B \lor \neg P) \land (A \lor B))
+\end{align}
+$$</p>
+</blockquote>
+<p>Notar que la fórmula derecha es lo mismo más la cláusula \(A \lor B\). O sea que agregar o sacar esa cláusula no nos cambia. Eso aplicado a FNC significa que:</p>
+<p>$$
+\lbrace C_1, \dots, C_m, \lbrace A, P \rbrace, \lbrace B, \neg P \rbrace \rbrace
+$$</p>
+<p>es insatisfactible sii</p>
+<p>$$
+\lbrace C_1, \dots, C_m, \lbrace A, P \rbrace, \lbrace B, \neg P \rbrace, \lbrace A, B \rbrace \rbrace
+$$</p>
+<p>es insatisfactible.</p>
+<p>A la cláusula \(\lbrace A, B \rbrace\) se la llama <strong>resolvente</strong> de las cláusulas \(\lbrace A, P \rbrace\) y \(\lbrace B, \neg P \rbrace\). Además, el resolvente de las cláusulas \(\lbrace P \rbrace\) y \(\lbrace \neg P \rbrace\) es la cláusula vacía y se anota \(\square\), que representa el <strong>falso</strong>. O sea que si llegué a esa cláusula \(\square\) ya llegué a que es insatisfactible!</p>
+<h3 id="regla-de-resolución"><a class="header" href="#regla-de-resolución">Regla de resolución</a></h3>
+<ul>
+<li>Dado un literal \(L\), el <strong>opuesto</strong> \(\bar{L}\) se define como:
+<ul>
+<li>\(\neg P\) si \(L = P\)</li>
+<li>\(P\) si \(L = \neg P\)</li>
+</ul>
+</li>
+<li>Dadas dos cláusulas \(C_1, C_2\), una cláusula \(C\) se dice <strong>resolvente</strong> de \(C_1\) y \(C_2\) sii, para algún literal \(L\), \(L \in C_1, \bar{L} \in C_2\), y:</li>
+</ul>
+<p>$$
+C = (C_1 - \lbrace L \rbrace) \cup (C_2 - \lbrace \bar{L} \rbrace)
+$$</p>
+<p>Formulación:</p>
+<p>$$
+\frac{\lbrace A_1, \dots, A_m, Q \rbrace\ \ \lbrace B_1, \dots, B_n, \neg Q \rbrace}{\lbrace A_1, \dots, A_m, B_1, \dots, B_n \rbrace}
+$$</p>
+<div id="admonition-ejemplo" class="admonition admonish-example">
+<div class="admonition-title">
+<p>Ejemplo</p>
+<p><a class="admonition-anchor-link" href="#admonition-ejemplo"></a></p>
+</div>
+<div>
+<p>El resultado de aplicar la regula de resolución a</p>
+<p>$$
+\set{\set{P, Q}, \set{P, \neg Q}, \set{\neg P, Q}, \set{\neg P, \neg Q}}
+$$</p>
+<p>es</p>
+<p>$$
+\set{\set{P, Q}, \set{P, \neg Q}, \set{\neg P, Q}, \set{\neg P, \neg Q}, \mathbf{\set{P}}}
+$$</p>
+</div>
+</div>
+<h3 id="volviendo-al-método-de-resolución"><a class="header" href="#volviendo-al-método-de-resolución">Volviendo al método de resolución</a></h3>
+<ul>
+<li>Voy a mantener el conjunto que representa la fórmula para la que hay que demostrar la infactibilidad</li>
+<li>en cada <strong>paso de resolución</strong>, agrego a mi conjunto \(S\) el resolvente de dos cláusulas de \(S\)</li>
+<li>es seguro asumir que el resolvente que se agrega a \(S\) no pertenece al mismo.</li>
+<li>Por la demo que vimos antes sabemos que agregar el resolvente preserva la insatisfactibilidad.</li>
+</ul>
+<p>Decimos que un conjunto de cláusulas es una <strong>refutación</strong> si contiene a la
+cláusula vacía \(\square\). El método de resolución entonces busca construir
+una secuencia de conjuntos de cláusulas usando pasos de resolución hasta llegar
+a una refutación.</p>
+<h3 id="terminación-de-la-regla-de-resolución"><a class="header" href="#terminación-de-la-regla-de-resolución">Terminación de la regla de resolución</a></h3>
+<ul>
+<li>La aplicación reiterada (inteligente, siempre que se agrega un resolvente
+tiene que ser nuevo), siempre termina</li>
+<li>En el peor de los casos la regla de resolución puede generar una cláusula
+nueva por cada combinación diferente de literales distintos de \(S\), o sea
+el conjunto de partes.</li>
+</ul>
+<blockquote>
+<p><strong>Teorema</strong>: \(S\) es insatisfactible sii tiene una refutación.</p>
+</blockquote>
+<h2 id="juntando-todo"><a class="header" href="#juntando-todo">Juntando todo...</a></h2>
+<p>Si queremos probar que \(A\) es tautología:</p>
+<ol>
+<li>Calculamos la FNC de \(\neg A\).</li>
+<li>Aplicamos el método de resolución</li>
+<li>Si hallamos una refutación:
+<ul>
+<li>\(\neg A\) es insatisfactible.</li>
+<li>Y por lo tanto, \(A\) es tautología.</li>
+</ul>
+</li>
+<li>Si no:
+<ul>
+<li>\(\neg A\) es satisfactible.</li>
+<li>Y por lo tanto, \(A\) no es tautología.</li>
+</ul>
+</li>
+</ol>
 
                     </main>
 

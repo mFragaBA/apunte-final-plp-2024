@@ -3169,10 +3169,533 @@ $$</p>
 </ul>
 <p>También se podrían redefinir pre-métodos (sumo \(l_k\) y descarto los \(l_i\) viejos)</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="unidad-4---programación-funcional"><a class="header" href="#unidad-4---programación-funcional">Unidad 4 - Programación Funcional</a></h1>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="resolución-proposicional"><a class="header" href="#resolución-proposicional">Resolución Proposicional</a></h1>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="resolución-en-lógica-de-primer-orden"><a class="header" href="#resolución-en-lógica-de-primer-orden">Resolución en lógica de primer orden</a></h1>
+<p>Hasta ahora vimos:</p>
+<ul>
+<li>Paradigma imperativo:
+<ul>
+<li>estado compuesto por variables.</li>
+<li>tira de instrucciones que cambia el estado (cambia el valor de las
+variables).</li>
+<li>ejecuto una a una a llegar a un estado final</li>
+</ul>
+</li>
+<li>Paradigma funcional
+<ul>
+<li>tenemos expresiones</li>
+<li>las expresiones se reducen en otras expresiones</li>
+<li>así hasta llegar a una forma normal</li>
+</ul>
+</li>
+<li>Paradigma de objetos
+<ul>
+<li>modelo objetos de la realidad</li>
+<li>colaboran mandándose mensajes</li>
+<li>programar es definir objetos, y principalmente qué mensajes responden y
+cómo</li>
+<li>acá el modelo de cómputo es resolver un problema haciendo que los objetos
+definidos se manden mensajes</li>
+</ul>
+</li>
+</ul>
+<p>El <strong>Paradigma funcional</strong> se basa en el uso de la lógica para resolver un
+problema. Para lograrlo, <strong>en lugar de decir el cómo se resuelve nos vamos a
+quedar en el qué</strong>.</p>
+<ul>
+<li>Tenemos un motor que dado el problema especificado con algún tipo de lógica
+(proposicional, primer orden, etc.), va a intentar probarlo como consecuencia
+de hechos (axiomas) y reglas de inferencia.</li>
+<li>tenemos un <strong>goal</strong> que es el objetivo a probar</li>
+<li>es <strong>declarativo</strong> justamente porque no indico cómo se resuelve si no el qué.</li>
+</ul>
+<h2 id="prolog"><a class="header" href="#prolog">Prolog</a></h2>
+<ul>
+<li>Introducido en el 71'</li>
+<li>Los programas se escriben en un subconjunto de la lógica de primer órden
+llamado cláusulas de Hoare.</li>
+<li>El fundamento teórico de fondo es el <strong>método de resolución</strong>. Esto permite
+ver si dado una fórmula es satisfacible o no.</li>
+<li>Programar se va a reducir a especificar el problema en una fórmula (en
+realidad nosotros definimos varias fórmulas pero por atrás se construye una
+única fórmula grande). Y con el método de resolución se va a ver si dicha
+fórmula es satisfacible o no.</li>
+</ul>
+<div id="admonition-ejemplo" class="admonition admonish-example">
+<div class="admonition-title">
+<p>Ejemplo</p>
+<p><a class="admonition-anchor-link" href="unidad_4.html#admonition-ejemplo"></a></p>
+</div>
+<div>
+<pre><code class="language-prolog">% Lo de abajo son *Hechos*
+habla(ale, ruso).
+habla(juan, ingles).
+habla(maria, ruso).
+habla(maria, ingles).
+
+% puedo definir predicados paramétricos
+seComunicaCon(X, Y) :- habla(X, L), habla(Y, L), X \= Y.
+
+% ejemplos de goal: "con quién se puede comunicar ale?", "quiénes se pueden comunicar entre sí?"
+seComunicaCon(X, ale)
+seComunicaCon(X, Y)
+</code></pre>
+</div>
+</div>
+<p>Si bien esto es muy interesante, es mejor arrancar con resolución en proposicional.</p>
+<div style="break-before: page; page-break-before: always;"></div><p>$$
+\newcommand{\true}{\mathbf{T}}
+\newcommand{\false}{\mathbf{F}}
+\newcommand{\satisf}{\models}
+\newcommand{\notsatisf}{\nvDash}
+\newcommand{\set}[1]{\lbrace #1 \rbrace}
+$$</p>
+<h1 id="resolución-proposicional"><a class="header" href="#resolución-proposicional">Resolución Proposicional</a></h1>
+<h2 id="repaso-sintaxis-de-la-lógica-proposicional"><a class="header" href="#repaso-sintaxis-de-la-lógica-proposicional">Repaso: Sintaxis de la lógica proposicional</a></h2>
+<p>Dado un conjunto \(\mathcal{V}\) de <strong>variables proposicionales</strong>, podemos
+definir inductivamente el conjunto de <strong>fórmulas proposicionales</strong> <em>Prop</em> de la
+siguiente forma:</p>
+<ol>
+<li>Una variable proposicional \(P_0, P_1, \dots\) es una proposición</li>
+<li>De forma inductiva, decimos que si \(A\) y \(B\) son proposiciones, entonces:
+<ul>
+<li>\(\neg A\) es una proposición.</li>
+<li>\(A \land B\) es una proposición.</li>
+<li>\(A \lor B\) es una proposición.</li>
+<li>\(A \supset B\) es una proposición (esta sería la implicación).</li>
+<li>\(A \iff B\) es una proposición.</li>
+</ul>
+</li>
+</ol>
+<p>Por ejemplo:</p>
+<ul>
+<li>\(A \lor \neg B\)</li>
+<li>\((A \land B) \supset (A \lor A)\)</li>
+</ul>
+<h3 id="semántica-1"><a class="header" href="#semántica-1">Semántica</a></h3>
+<blockquote>
+<p>Nota: Acá cuando hablamos de semántica nos referimos a ver si una fórmula es verdadera o falsa.</p>
+</blockquote>
+<ul>
+<li>Una <strong>valuación</strong> es una función \(v: \mathcal{V} \leftarrow \lbrace \true, \false \rbrace \) que le asigna un valor de verdads a cada variable proposicional.</li>
+<li>Fijada una valuación, decimos que la misma <strong>satisface</strong> una proposición \(A\) si \(v \satisf A\), donde también lo definimos inductivamente:</li>
+</ul>
+<p>$$
+\begin{align}
+v \satisf P &amp;\text{ sii } v(P) = \true \\
+v \satisf \not A &amp;\text{ sii } v \notsatisf A \\
+v \satisf A \lor B &amp;\text{ sii } v \satisf A \text{ o } v \satisf B \\
+v \satisf A \land B &amp;\text{ sii } v \satisf A \text{ y } v \satisf B \\
+v \satisf A \supset B &amp;\text{ sii } v \notsatisf A \text{ o } v \satisf B \\
+v \satisf A \iff B &amp;\text{ sii } (v \satisf A \text{ sii } v \satisf B) \\
+\end{align}
+$$</p>
+<h3 id="tautologías-y-satisfactibilidad"><a class="header" href="#tautologías-y-satisfactibilidad">Tautologías y satisfactibilidad</a></h3>
+<p>Decimos que una proposición \(A\) es</p>
+<ul>
+<li><strong>tautología</strong> si independientemente de la valuación es verdadera, o sea \(\forall v \text{ valuación},\ v \satisf A \)
+<ul>
+<li>Ejemplo: \(P \lor \neg P\)</li>
+</ul>
+</li>
+<li><strong>satisfacible</strong> si existe una valuación que satisface a \(A\), o sea \(\exists v \text{ valuación},\ v \satisf A \)
+<ul>
+<li>Ejemplo: \(P\)</li>
+</ul>
+</li>
+<li><strong>insatisfacible</strong> si no existe una valuación que la satisfaga, o sea \(\nexists v \text{ valuación},\ v \satisf A \)
+<ul>
+<li>Ejemplo: \(P \land \neg P\)</li>
+</ul>
+</li>
+</ul>
+<p>Ahora, dado un conjunto de proposiciones \(S\), dimos que es:</p>
+<ul>
+<li><strong>satisfacible</strong> si existe una valuación que esa misma valuación satisface todas las proposiciones de \(S\).
+<ul>
+<li>ej: \(\lbrace P, Q \rbrace\).</li>
+<li>es lo mismo que ver que satisface a la conjunción de todas las proposiciones.</li>
+</ul>
+</li>
+<li><strong>insatisfacible</strong> si no es satisfacible (o sea cualquier valuación tiene una proposición que no satisface).
+<ul>
+<li>ej: \(\lbrace P, \neg P \rbrace\).</li>
+</ul>
+</li>
+</ul>
+<div id="admonition-recuerdo" class="admonition admonish-info">
+<div class="admonition-title">
+<p>Recuerdo</p>
+<p><a class="admonition-anchor-link" href="prop_solv.html#admonition-recuerdo"></a></p>
+</div>
+<div>
+<p>Cómo pruebo que una fórmula es una tautología/satisfacible/insatisfacible? Con la tabla de verdad!</p>
+<p>Tautología:</p>
+<div class="table-wrapper"><table><thead><tr><th>A</th><th>A &gt; A</th></tr></thead><tbody>
+<tr><td>T</td><td>T</td></tr>
+<tr><td>F</td><td>T</td></tr>
+</tbody></table>
+</div>
+<p>Satisfacible:</p>
+<div class="table-wrapper"><table><thead><tr><th>A</th><th>B</th><th>(A ^ B)</th></tr></thead><tbody>
+<tr><td>T</td><td>T</td><td>T</td></tr>
+<tr><td>T</td><td>F</td><td>F</td></tr>
+<tr><td>F</td><td>T</td><td>F</td></tr>
+<tr><td>F</td><td>F</td><td>F</td></tr>
+</tbody></table>
+</div>
+<p>insatisfacible:</p>
+<div class="table-wrapper"><table><thead><tr><th>A</th><th>B</th><th>(-A v B)</th><th>(-A v -B)</th><th>(-A v B) ^ (-A v -B) ^ A</th></tr></thead><tbody>
+<tr><td>T</td><td>T</td><td>T</td><td>F</td><td>F</td></tr>
+<tr><td>T</td><td>F</td><td>F</td><td>T</td><td>F</td></tr>
+<tr><td>F</td><td>T</td><td>T</td><td>T</td><td>F</td></tr>
+<tr><td>F</td><td>F</td><td>T</td><td>T</td><td>F</td></tr>
+</tbody></table>
+</div></div>
+</div>
+<h3 id="tautologías-e-insatisfactibilidad"><a class="header" href="#tautologías-e-insatisfactibilidad">Tautologías e insatisfactibilidad</a></h3>
+<p>Tenemos un teorema que nos permite demostrar que algo es insatisfacible viendo que su negación es una tautología (y viceversa).</p>
+<p>(La demo es bastante directa, instanciás las definiciones y reemplazás por \(\satisf\) y \(\notsatisf\) donde corresponda).</p>
+<p>Por qué tiene sentido esto? Bueno, porque en resolución y otros mecanismos suele ser más fácil probar que algo es insatisfacible.</p>
+<h3 id="validez-por-refutación"><a class="header" href="#validez-por-refutación">Validez por refutación</a></h3>
+<p><em>Principio de demostración por refutación</em>:</p>
+<blockquote>
+<p>Probar que \(A\) es <strong>válido</strong> mostrando que \(\neg A\) es <strong>insatisfactible</strong></p>
+</blockquote>
+<p>Hay varias técnicas para demostrar por refutación:</p>
+<ul>
+<li>Tableaux semántico (en LyC usamos este)</li>
+<li>Procedimiento de Davis-Putnam (este suelen usar los SAT-solvers)</li>
+<li>Resolución (vamos a ver este)</li>
+</ul>
+<h2 id="método-de-resolución"><a class="header" href="#método-de-resolución">Método de resolución</a></h2>
+<ul>
+<li>fácil de entender e implementar</li>
+<li>tiene una regla de inferencia llamada <strong>regla de resolución</strong>.</li>
+<li>si bien no es necesario, vamos a trabajar con fórmulas que están en <strong>forma
+normal conjuntiva</strong>. Esto implica que hacemos un reacomodamiento/reescritura
+equivalente de las fórmulas para que tengan una fórma con la que es más fácil
+trabajar.</li>
+</ul>
+<div id="admonition-forma-normal-conjuntiva-fnc" class="admonition admonish-info">
+<div class="admonition-title">
+<p>Forma normal conjuntiva (FNC)</p>
+<p><a class="admonition-anchor-link" href="prop_solv.html#admonition-forma-normal-conjuntiva-fnc"></a></p>
+</div>
+<div>
+<ul>
+<li>Un <strong>literal</strong> es una variable proposicional o su negación.</li>
+<li>Una proposición \(A\) está en FNC si es una <strong>conjunción de cláusulas</strong>
+<ul>
+<li>Y cada cláusula es una dusyunción de literales</li>
+</ul>
+</li>
+</ul>
+<p>Entonces la fórmula tiene la pinta:</p>
+<p>$$
+(B_{11} \lor \dots \lor B_{1n_1}) \land \dots \land (B_{m1} \lor \dots \lor B_{mn_m})
+$$</p>
+<p>Donde cada \(B_{ij}\) es \(P\) o \(\neg P\).</p>
+<blockquote>
+<p><strong>QUIZ TIME</strong>: cuáles de las siguientes fórmulas están en FNC?</p>
+<ul>
+<li>\((P \lor Q) \land (P \lor \neg Q)\) ... -&gt; está en FNC.</li>
+<li>\((P \lor Q) \land (P \lor \neg \neg Q)\) ... -&gt; no está en FNC, porque tenemos el \(\neg \neg Q\). Si lo reemplazáramos por \(Q\) nomás ahí si.</li>
+<li>\((P \land Q) \lor P \) ... -&gt; no está en FNC, deberíamos tener una única cláusula (por la disyunción) pero en ese caso el \((P \land Q)\) no es un literal.</li>
+</ul>
+</blockquote>
+</div>
+</div>
+<h3 id="conversión-a-fnc"><a class="header" href="#conversión-a-fnc">Conversión a FNC</a></h3>
+<p>Hay un teorema que nos dice que dada una proposición \(A\) existe una proposición \(A'\) que está en FNC y que es lógicamente equivalente a \(A\).</p>
+<blockquote>
+<p>Nota: por lógicamente equivalente es que \(A \iff B\) es tautología.</p>
+</blockquote>
+<p>La forma de probar el teorema es directamente dar la transformación. Y para
+construir la transformación nos basamos en que tanto \(\lor\) como
+\(\land\) <strong>son conmutativos, asociativos e idempotentes</strong>. Usando las leyes
+de demorgan es transformar la proposición en otra lógicamente equivalente hasta
+llegar a la forma que necesito.</p>
+<p>Además, vamos a hacer 2 asunciones:</p>
+<ul>
+<li>cada cláusula es única</li>
+<li>podemos escribir las cláusulas como conjuntos</li>
+</ul>
+<p>En base a eso, usamos la notación \(\lbrace C_1, \dots, C_n \rbrace\), con cada \(C_i\) un conjunto de literales \(\lbrace B_{i1}, \dots, B_{in_i} \rbrace\). Por ejemplo, la FNC \((P \lor Q) \land (P \lor \neg Q)\) se anota:</p>
+<p>$$
+\lbrace \lbrace P, Q \rbrace, \lbrace P, \neg Q \rbrace \rbrace
+$$</p>
+<p>Para las transformaciones nos vamos a basar en que la siguiente proposición es una tautología:</p>
+<p>$$
+(A \lor P) \land (B \lor \neg P) \iff (A \lor P) \land (B \lor \neg P) \land (A \lor B)
+$$</p>
+<blockquote>
+<p>Demo:</p>
+<p>$$
+\begin{align}
+(A \lor P) \land (B \lor \neg P) &amp;\iff_{\text{agrego termino redundante}} (A \lor P) \land (B \lor \neg P) \land ((A \lor B) \lor \neg (A \lor B)) \\
+&amp;\iff_{distribuyo} ((A \lor P) \land (B \lor \neg P) \land (A \lor B)) \lor \\
+&amp;\ \ \ \ \ \ ((A \lor P) \land (B \lor \neg P) \land (\neg A \land \neg B))
+\end{align}
+$$</p>
+<p>Veamos que ese segundo término es insatisfactible (y como está en un \(\lor\) lo podemos omitir).</p>
+<p>$$
+\begin{align}
+(A \lor P) \land (B \lor \neg P) \land (\neg A \land \neg B) &amp;\iff ((A \lor P) \land \neg A) \land ((B \lor \neg P) \land \neg B) \\
+&amp;\iff_{dist} ((A \land \neg A) \lor (P \land \neg A)) \land ((B \land \neg B) \lor (\neg P \land \neg B)) \\
+&amp;\iff_{reduzco} ((P \land \neg A)) \land ((\neg P \land \neg B)) \\
+&amp;\iff_{saco parent.} P \land \neg P \land \neg A \land \neg B
+\end{align}
+$$</p>
+<p>\(P \land \neg P\) es insatisfactible!!!! Entonces volviendo a arriba:</p>
+<p>$$
+\begin{align}
+(A \lor P) \land (B \lor \neg P) &amp;\iff \dots \\
+&amp;\iff ((A \lor P) \land (B \lor \neg P) \land (A \lor B)) \lor \\
+&amp;\ \ \ \ \ \ ((A \lor P) \land (B \lor \neg P) \land (\neg A \land \neg B)) \\
+&amp;\iff ((A \lor P) \land (B \lor \neg P) \land (A \lor B))
+\end{align}
+$$</p>
+</blockquote>
+<p>Notar que la fórmula derecha es lo mismo más la cláusula \(A \lor B\). O sea que agregar o sacar esa cláusula no nos cambia. Eso aplicado a FNC significa que:</p>
+<p>$$
+\lbrace C_1, \dots, C_m, \lbrace A, P \rbrace, \lbrace B, \neg P \rbrace \rbrace
+$$</p>
+<p>es insatisfactible sii</p>
+<p>$$
+\lbrace C_1, \dots, C_m, \lbrace A, P \rbrace, \lbrace B, \neg P \rbrace, \lbrace A, B \rbrace \rbrace
+$$</p>
+<p>es insatisfactible.</p>
+<p>A la cláusula \(\lbrace A, B \rbrace\) se la llama <strong>resolvente</strong> de las cláusulas \(\lbrace A, P \rbrace\) y \(\lbrace B, \neg P \rbrace\). Además, el resolvente de las cláusulas \(\lbrace P \rbrace\) y \(\lbrace \neg P \rbrace\) es la cláusula vacía y se anota \(\square\), que representa el <strong>falso</strong>. O sea que si llegué a esa cláusula \(\square\) ya llegué a que es insatisfactible!</p>
+<h3 id="regla-de-resolución"><a class="header" href="#regla-de-resolución">Regla de resolución</a></h3>
+<ul>
+<li>Dado un literal \(L\), el <strong>opuesto</strong> \(\bar{L}\) se define como:
+<ul>
+<li>\(\neg P\) si \(L = P\)</li>
+<li>\(P\) si \(L = \neg P\)</li>
+</ul>
+</li>
+<li>Dadas dos cláusulas \(C_1, C_2\), una cláusula \(C\) se dice <strong>resolvente</strong> de \(C_1\) y \(C_2\) sii, para algún literal \(L\), \(L \in C_1, \bar{L} \in C_2\), y:</li>
+</ul>
+<p>$$
+C = (C_1 - \lbrace L \rbrace) \cup (C_2 - \lbrace \bar{L} \rbrace)
+$$</p>
+<p>Formulación:</p>
+<p>$$
+\frac{\lbrace A_1, \dots, A_m, Q \rbrace\ \ \lbrace B_1, \dots, B_n, \neg Q \rbrace}{\lbrace A_1, \dots, A_m, B_1, \dots, B_n \rbrace}
+$$</p>
+<div id="admonition-ejemplo" class="admonition admonish-example">
+<div class="admonition-title">
+<p>Ejemplo</p>
+<p><a class="admonition-anchor-link" href="prop_solv.html#admonition-ejemplo"></a></p>
+</div>
+<div>
+<p>El resultado de aplicar la regula de resolución a</p>
+<p>$$
+\set{\set{P, Q}, \set{P, \neg Q}, \set{\neg P, Q}, \set{\neg P, \neg Q}}
+$$</p>
+<p>es</p>
+<p>$$
+\set{\set{P, Q}, \set{P, \neg Q}, \set{\neg P, Q}, \set{\neg P, \neg Q}, \mathbf{\set{P}}}
+$$</p>
+</div>
+</div>
+<h3 id="volviendo-al-método-de-resolución"><a class="header" href="#volviendo-al-método-de-resolución">Volviendo al método de resolución</a></h3>
+<ul>
+<li>Voy a mantener el conjunto que representa la fórmula para la que hay que demostrar la infactibilidad</li>
+<li>en cada <strong>paso de resolución</strong>, agrego a mi conjunto \(S\) el resolvente de dos cláusulas de \(S\)</li>
+<li>es seguro asumir que el resolvente que se agrega a \(S\) no pertenece al mismo.</li>
+<li>Por la demo que vimos antes sabemos que agregar el resolvente preserva la insatisfactibilidad.</li>
+</ul>
+<p>Decimos que un conjunto de cláusulas es una <strong>refutación</strong> si contiene a la
+cláusula vacía \(\square\). El método de resolución entonces busca construir
+una secuencia de conjuntos de cláusulas usando pasos de resolución hasta llegar
+a una refutación.</p>
+<h3 id="terminación-de-la-regla-de-resolución"><a class="header" href="#terminación-de-la-regla-de-resolución">Terminación de la regla de resolución</a></h3>
+<ul>
+<li>La aplicación reiterada (inteligente, siempre que se agrega un resolvente
+tiene que ser nuevo), siempre termina</li>
+<li>En el peor de los casos la regla de resolución puede generar una cláusula
+nueva por cada combinación diferente de literales distintos de \(S\), o sea
+el conjunto de partes.</li>
+</ul>
+<blockquote>
+<p><strong>Teorema</strong>: \(S\) es insatisfactible sii tiene una refutación.</p>
+</blockquote>
+<h2 id="juntando-todo"><a class="header" href="#juntando-todo">Juntando todo...</a></h2>
+<p>Si queremos probar que \(A\) es tautología:</p>
+<ol>
+<li>Calculamos la FNC de \(\neg A\).</li>
+<li>Aplicamos el método de resolución</li>
+<li>Si hallamos una refutación:
+<ul>
+<li>\(\neg A\) es insatisfactible.</li>
+<li>Y por lo tanto, \(A\) es tautología.</li>
+</ul>
+</li>
+<li>Si no:
+<ul>
+<li>\(\neg A\) es satisfactible.</li>
+<li>Y por lo tanto, \(A\) no es tautología.</li>
+</ul>
+</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div><p>$$
+\newcommand{\true}{\mathbf{T}}
+\newcommand{\false}{\mathbf{F}}
+\newcommand{\satisf}{\models}
+\newcommand{\notsatisf}{\nvDash}
+\newcommand{\set}[1]{\lbrace #1 \rbrace}
+$$</p>
+<h1 id="resolución-en-lógica-de-primer-orden"><a class="header" href="#resolución-en-lógica-de-primer-orden">Resolución en lógica de primer orden</a></h1>
+<h1 id="repaso"><a class="header" href="#repaso">Repaso</a></h1>
+<h2 id="lenguaje-de-primer-orden"><a class="header" href="#lenguaje-de-primer-orden">Lenguaje de primer orden</a></h2>
+<p>Un <strong>lenguaje de primer orden (LPO)</strong> \(\mathcal{L}\) consiste en:</p>
+<ol>
+<li>Un conjunto numerable de <strong>constantes</strong> \(c_0, c_1, \dots\)</li>
+<li>Un conjunto numerable de símbolos de <strong>función con aridad</strong> \(n &gt; 0\) (indica el nro de argumentos) \(f_0, f_1, \dots\)</li>
+<li>Un conjunto numerable de símbolos de <strong>predicado con aridad</strong> \(n \geq 0\), \(P_0, P_1, \dots\)</li>
+</ol>
+<p>Por ejemplo, un lenguaje de primer orden para la aritmética sería:</p>
+<ul>
+<li>constantes: \(0\),</li>
+<li>Símbolos de función: \(S, +, *\)</li>
+<li>Símbolos de predicado: \(&lt;, =\)</li>
+</ul>
+<h2 id="términos-de-primer-orden"><a class="header" href="#términos-de-primer-orden">Términos de primer orden</a></h2>
+<p>Los definimos de forma inductiva. Dado un conjunto de variables \(\mathcal{V} = \set{x_0, x_1, \dots}\) y \(\mathcal{L}\) un LPO. El conjunto de \(\mathcal{L}\)-términos se define como:</p>
+<ol>
+<li>Toda constante de \(\mathcal{L}\) y toda variable es un \(\mathcal{L}\)-término.</li>
+<li>Si \(t_1, \dots, t_n \in \mathcal{L}\)-términos y \(f\) es un símbolo de función de aridad \(n\), entonces \(f(t_1, \dots, t_n) \in \mathcal{L}\)-términos.</li>
+</ol>
+<p>Siguiendo con el ejemplo de la aritmética, tendríamos los términos \(S(0), +(S(0), S(S(0))), *(S(x_1), +(x_2, S(x_3)))\)</p>
+<h2 id="fórmulas-atómicas"><a class="header" href="#fórmulas-atómicas">Fórmulas atómicas</a></h2>
+<p>Lo mismo que antes pero para predicados:</p>
+<ol>
+<li>Todo símbolo de predicado de aridad 0 es una \(\mathcal{L}\)-fórmula atómica.</li>
+<li>Si \(t_1, \dots, t_n \in \mathcal{L}\)-términos y \(P\) es un símbolo de predicado de aridad \(n\), entonces \(f(t_1, \dots, t_n) \in \mathcal{L}\)-fórmulas atómicas.</li>
+</ol>
+<p>Again, tomando a la aritmética tendríamos por ejemplo \(&lt;(0, S(0)), &lt;(x_1, +(S(0), x_2))\)</p>
+<h2 id="fórmulas-de-primer-orden"><a class="header" href="#fórmulas-de-primer-orden">Fórmulas de primer orden</a></h2>
+<p>Dado un conjunto numerable de variables \(\mathcal{V}\) y \(\mathcal{L}\) un LPO. El conjunto de \(\mathcal{L}\)-fórmulas se define como:</p>
+<ol>
+<li>Toda \(\mathcal{L}\)-fórmula atómica es una \(\mathcal{L}\)-fórmula.</li>
+<li>Si \(A, B \in \mathcal{L}\)-fórmulas, entonces \((A \land B), (A \lor B), (A \supset B), (A \iff B) y \neg A\) son \(\mathcal{L}\)-fórmulas.</li>
+<li>(cuantificadores) Para toda variable \(x_i\), y cualquier \(\mathcal{L}\)-fórmula A, \(\forall x_i.A\) y \(\exists x_i.A\) son \(\mathcal{L}\)-fórmulas</li>
+</ol>
+<p>De vuelta pensando en la aritmética, tendríamos por ejemplo \(\forall x. \forall y. (x &lt; y \supset \exists z. y = x + z)\)</p>
+<h2 id="variables-libres-y-ligadas"><a class="header" href="#variables-libres-y-ligadas">Variables libres y ligadas</a></h2>
+<ul>
+<li>Los cuantificadores ligan variables</li>
+<li>Usamos \(FV(A)\) y \(BV(A)\) para referirnos a las variables libres y ligadas de \(A\) (F de free, B de bounded).</li>
+<li>\(FV(A)\) y \(BV(A)\) se pueden definir por inducción estructural (La noción es la misma que la que vimos para cálculo sigma o cálculo lambda, salvo que ahora estamos trabajando con el lenguaje del cálculo de primer orden).</li>
+</ul>
+<p>Decimos que una fórmula está <strong>rectificada</strong> si</p>
+<ul>
+<li>Su conjunto de variables libres y ligadas es disjunto (o sea no hay confución
+de qué es libre y qué ligado).</li>
+<li>Cuantifictintasadores distintos de la fórmula ligan variables dis</li>
+</ul>
+<blockquote>
+<p>Detalle no menor: toda fórmula se puede <strong>rectificar</strong> a una fórmula
+lógicamente equivalente (similar a lo que hicimos cuando vimos lambda
+cálculo).</p>
+</blockquote>
+<h2 id="sentencias"><a class="header" href="#sentencias">Sentencias</a></h2>
+<p>Una <strong>sentencia</strong> es una fórmula cerrada.</p>
+<ul>
+<li>muchos de los resultados se formulan para sentencias</li>
+<li>esto no suele tener pérdida de generalidad porque toda fórmula es lógicamente equivalente a su <strong>clausura universal</strong>.</li>
+</ul>
+<div id="admonition-clausura-universal" class="admonition admonish-info">
+<div class="admonition-title">
+<p>Clausura universal</p>
+<p><a class="admonition-anchor-link" href="primer_orden_solv.html#admonition-clausura-universal"></a></p>
+</div>
+<div>
+<p>La clausura universal es aquella que tiene que tiene cuantificadores al principio para todas sus variables. Ej:</p>
+<p>$$
+\forall x. \forall y. P(x, y) \iff P(x, y)
+$$</p>
+</div>
+</div>
+<h2 id="semántica-2"><a class="header" href="#semántica-2">Semántica</a></h2>
+<h3 id="estructura-de-primer-orden"><a class="header" href="#estructura-de-primer-orden">Estructura de primer orden</a></h3>
+<p>La estructura viene a ser una forma de darle significado a nuestra lógica para
+que las constantes correspondan a constantes, los símbolos de función a
+funciones que corresponden a cierto dominio y a los predicados a predicados
+booleanos definidos sobre un dominio.</p>
+<p>Para un LPO \(\mathcal{L}\), una estructura para \(\mathcal{L}\), \(\mathbf{M}\) es un par \(\mathbf{M} = (M, I)\) donde:</p>
+<ul>
+<li>\(M\) (el dominio) es un conjunto no vacío</li>
+<li>\(I\) (la función de interpretación) asigna funciones y predicados sobre el dominio \(M\) a símbolos de \(\mathcal{L}\) de la siguiente manera:
+<ol>
+<li>para toda constante \(c\), \(I(c) \in M\)</li>
+<li>para toda \(f\) de aridad \(n &gt; 0\), \(I(f): M^n \rightarrow M\)</li>
+<li>para todo predicado \(P\) de aridad \(n \geq 0\), \(I(P) : M^n \rightarrow \set{\true, \false}\)</li>
+</ol>
+</li>
+</ul>
+<h3 id="satisfactibilidad"><a class="header" href="#satisfactibilidad">Satisfactibilidad</a></h3>
+<div id="admonition-asignación" class="admonition admonish-info">
+<div class="admonition-title">
+<p>Asignación</p>
+<p><a class="admonition-anchor-link" href="primer_orden_solv.html#admonition-asignación"></a></p>
+</div>
+<div>
+<p>Para hablar de satisfactibilidad como lo hicimos para la lógica proposicional,
+tenemos que hablar antes de las asignaciones. Dada \(\mathbf{M}\) una
+estructura para \(\mathcal{L}\), una <strong>asignación</strong> es una función \(s : \mathcal{V} \rightarrow M\).</p>
+<p>Si \(a \in M\), usamos la notación \(s[x \leftarrow a]\) para denotar la
+asignación que es igual a \(s\) salvo que para \(x\) devuelve \(a\)</p>
+</div>
+</div>
+<p>La relación \( s \satisf_{\mathbf{M}} A\) establece que la asignación \(s\) satisface la fórmula \(A\) bajo la estructura \(\mathbf{M}\). Vamos a definirla de forma informal usando inducción estructural:</p>
+<p>$$
+\begin{align}
+s \satisf_{\mathbf{M}} P(t_1, \dots, t_n) &amp;\text{sii} P(s(t_1), \dots, s(t_n)) \\
+s \satisf_{\mathbf{M}} \neg A &amp;\text{ sii } s \notsatisf_{\mathbf{M}} A \\
+s \satisf_{\mathbf{M}} (A \land B) &amp;\text{ sii } s \satisf_{\mathbf{M}} A \text{ y } s \satisf_{\mathbf{M}} B \\
+s \satisf_{\mathbf{M}} (A \lor B) &amp;\text{ sii } s \satisf_{\mathbf{M}} A \text{ o } s \satisf_{\mathbf{M}} B \\
+s \satisf_{\mathbf{M}} (A \supset B) &amp;\text{ sii } s \notsatisf_{\mathbf{M}} A \text{ o } s \satisf_{\mathbf{M}} B \\
+s \satisf_{\mathbf{M}} (A \iff B) &amp;\text{ sii } (s \satisf_{\mathbf{M}} A \text{ sii } s \satisf_{\mathbf{M}} B) \\
+s \satisf_{\mathbf{M}} \forall x_i. A &amp;\text{ sii } s[x_i \leftarrow a] \satisf_{\mathbf{M}} A \text{ para todo } a \in M \\
+s \satisf_{\mathbf{M}} \exists x_i. A &amp;\text{ sii } s[x_i \leftarrow a] \satisf_{\mathbf{M}} A \text{ para algún } a \in M
+\end{align}
+$$</p>
+<h3 id="validez"><a class="header" href="#validez">Validez</a></h3>
+<p>Una fórmula \(A\) es <strong>satisfacible en</strong> \(mathbf{M}\) sii existe una asignación \(s\) tal que</p>
+<p>$$
+s \satisf_{\mathbf{M}} A
+$$</p>
+<p>Ahora, si no fijamos el \(\mathbf{M}\), una fórmula \(A\) <strong>es satisfactible</strong> (a secas) sii existe un \(\mathbf{M}\) tal que \(A\) es satisfactible en \(\mathbf{M}\). En caso contrario decimos que es <strong>insatisfactible</strong>.</p>
+<p>Por último, decimos que una fórmula \(A\) es <strong>válida en</strong> \(\mathbf{M}\) (fijado el M, es tautología) sii</p>
+<p>$$
+s \satisf_{\mathbf{M}} A, \text{ para toda asignación } s
+$$</p>
+<blockquote>
+<p><strong>Obs</strong>: \(A\) es válida sii \(\neg A\) es insatisfactible.</p>
+</blockquote>
+<div id="admonition-teorema-de-church" class="admonition admonish-info">
+<div class="admonition-title">
+<p>Teorema de Church</p>
+<p><a class="admonition-anchor-link" href="primer_orden_solv.html#admonition-teorema-de-church"></a></p>
+</div>
+<div>
+<p><strong>No existe</strong> un algoritmo que pueda determinar si una fórmula de primer orden es válida.</p>
+<p><img src="./img/ohno.png#center" alt="" /></p>
+<p>O sea que sonamos? Bueno no, a medias.</p>
+<ul>
+<li>El método de resolución que vamos a ver <strong>no es un procedimiento efectivo</strong>,</li>
+<li>Es un problema de <strong>semi-decisión</strong>. Vamos a lograr que
+<ul>
+<li>si una sentencia es insatisfactible, encuentro una refutación.</li>
+<li>pero si es satisfactible puede no terminar.</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="resolución-sld"><a class="header" href="#resolución-sld">Resolución SLD</a></h1>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="prolog"><a class="header" href="#prolog">Prolog</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="prolog-1"><a class="header" href="#prolog-1">Prolog</a></h1>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="prácticas"><a class="header" href="#prácticas">Prácticas</a></h1>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="guia-0---repaso-haskell"><a class="header" href="#guia-0---repaso-haskell">Guia 0 - Repaso Haskell</a></h1>
 <h2 id="ejercicio-1-1"><a class="header" href="#ejercicio-1-1">Ejercicio 1</a></h2>
