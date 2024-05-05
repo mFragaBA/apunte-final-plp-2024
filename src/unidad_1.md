@@ -1,6 +1,6 @@
 # Unidad 1 - Paradigma funcional
 
-![](./img/hold_up.png)
+![](./img/hold_up.png#center)
 
 La materia se llama "Paradigmas de Programación. Qué es un paradigma de programación:
 

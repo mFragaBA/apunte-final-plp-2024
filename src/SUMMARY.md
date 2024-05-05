@@ -13,7 +13,7 @@
     - [Cálculo Sigma](./sigma_calc.md)
 - [Unidad 4 - Programación Lógica](./unidad_4.md)
     - [Resolución Proposicional](./prop_solv.md)
-    - [Resolución en lógica de primer orden](./primer_orden_solv.md)
+    - [Resolución en Lógica de primer orden](./primer_orden_solv.md)
     - [Resolución SLD](./sld_solv.md)
     - [Prolog](./prolog.md)
 - [Prácticas](./practicas.md)
