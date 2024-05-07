@@ -641,7 +641,90 @@ sin probar con todos los enteros, y hay infinitos enteros.</p>
 <pre><code class="language-haskell">mapConjunto fInv c = \x -&gt; c (fInv x)
 </code></pre>
 <h3 id="ejercicio-21-"><a class="header" href="#ejercicio-21-">Ejercicio 21 ★</a></h3>
+<p>Consideremos el siguiente tipo de datos:</p>
+<pre><code class="language-haskell">data AHD tInterno tHoja = Hoja tHoja
+                        | Rama tInterno (AHD tInterno tHoja)
+                        | Bin (AHD tInterno tHoja) tInterno (AHD tInterno tHoja)
+</code></pre>
+<p>que representa un árbol binario no vacío cuyos nodos internos pueden tener datos de un tipo deiferente al de sus hojas (AHD = árbol con hojas distinguidas). Por ejemplo:</p>
+<ul>
+<li><code>Bin (Hoja "hola") 'b' (Rama 'c' (Hoja "chau))</code> tiene tipo <code>AHD Char String</code></li>
+<li><code>Rama 1 (Bin (Hoja True) -2 (Hoja False))</code> tiene tipo <code>AHD Int Bool</code></li>
+</ul>
+<p>Algunos ejemplos de forma más gráfica:</p>
+<p><img src="./img/practica_1_ej_21.png#center" alt="" /></p>
+<ol>
+<li><strong>Escribir el esquema de recursión estructural <code>foldAHD</code> para este tipo de datos y dar su tipo</strong>.</li>
+</ol>
+<p>Consejo antes de empezar, si van a probarlo desde la computadora, métanle un <code>deriving (Show, Eq)</code> al final de la definición de <code>AHD</code>.</p>
+<p>Primero damos el tipo. Recuerdo que necesito una función para cada constructor</p>
+<pre><code class="language-haskell">-- siendo a = tInterno, b = tHoja y c = el tipo resultante
+foldAHD :: (a -&gt; c -&gt; c -&gt; c)   -- Bin
+        -&gt; (a -&gt; c -&gt; c)        -- Rama
+        -&gt; (b -&gt; c)             -- Hoja
+        -&gt; AHD a b
+        -&gt; c
+</code></pre>
+<p>Y luego damos el esquema:</p>
+<pre><code class="language-haskell">foldAHD _ _ fHoja (Hoja a) = fHoja a
+foldAHD fBin fRama fHoja (Rama a subarbol) = fRama a (foldAHD fBin fRama fHoja subarbol)
+foldAHD fBin fRama fHoja (Bin subarbolIzq a subarbolDer) = fBin a (rec subarbolIzq) (rec subarbolDer)
+                                                        where rec = foldAHD fBin fRama fHoja
+</code></pre>
+<ol start="2">
+<li><strong>Escribir, usando <code>foldAHD</code>, la función <code>mapAHD :: (a -&gt; b) -&gt; (c -&gt; d) -&gt; AHD a c -&gt; AHD b d</code>, que actúa de manera análoga al <code>map</code> de listas, aplicando la primera función a los nodos internos y la segunda a las hojas. Por ejemplo:</strong></li>
+</ol>
+<pre><code class="language-haskell">mapAHD :: (a -&gt; b) -&gt; (c -&gt; d) -&gt; AHD a c -&gt; AHD b d
+mapAHD fInternos fHojas = foldAHD (\nodo recIzq recDer -&gt; Bin recIzq (fInternos nodo) recDer) 
+                                  (Rama . fInternos)
+                                  (Hoja . fHojas)
+</code></pre>
 <h3 id="ejercicio-23-"><a class="header" href="#ejercicio-23-">Ejercicio 23 ★</a></h3>
+<ol>
+<li><strong>Definir el tipo de datos <code>RoseTree</code> de árboles no vacíos, donde cada nodo tiene una cantidad indeterminada de hijos.</strong></li>
+</ol>
+<pre><code class="language-haskell">data RoseTree t = Nodo t [RoseTree t] deriving (Show, Eq)
+</code></pre>
+<p>Cuando la lista es vacía asumimos que tenemos una hoja.</p>
+<ol start="2">
+<li><strong>Escribir el esquema de recursión estructural para <code>RoseTree</code>. Importante escribir primero su tipo</strong>.</li>
+</ol>
+<p>Siguiendo la sugerencia primero el tipo:</p>
+<pre><code class="language-haskell">foldRose :: (a -&gt; [b] -&gt; b) -&gt; RoseTree a -&gt; b
+</code></pre>
+<p>A priori no necesito caso base porque las hojas son cuando la lista es vacía, se puede manejar con la misma función.</p>
+<p>Luego la definición:</p>
+<pre><code class="language-haskell">foldRose f (Nodo a ts) = f a (map (foldRose f) ts)
+</code></pre>
+<p>Extra: con <code>foldRose</code> puedo definir <code>mapRose</code>:</p>
+<pre><code class="language-haskell">mapRose :: (a -&gt; b) -&gt; RoseTree a -&gt; RoseTree b
+mapRose f = foldRose (Nodo . f)
+-- equivalente a 
+-- mapRose f = foldRose (\nodo recs -&gt; Nodo (f nodo) recs)
+</code></pre>
+<ol start="3">
+<li>
+<p><strong>Usando el esquema definido, escribir las siguientes funciones:</strong></p>
+<ul>
+<li>a. <code>hojas</code>, que dado un <code>RoseTree</code>, devuelva la lista con sus hojas ordenadas de izquierda a derecha según su aparición en el <code>RoseTree</code></li>
+</ul>
+<pre><code class="language-haskell">hojas :: RoseTree a -&gt; [a]
+hojas = foldRose (\nodo recs -&gt; if null recs then [nodo] else concat recs)
+</code></pre>
+<ul>
+<li>b. <code>distancias</code>, que dado un <code>RoseTree</code>, devuelva las distancias de su raíz a cada una de sus hojas.</li>
+</ul>
+<pre><code class="language-haskell">distancias :: RoseTree a -&gt; [Integer]
+distancias = foldRose (\nodo recs -&gt; if null recs then [0] else concat (map (+1) recs))
+</code></pre>
+<ul>
+<li>c. <code>altura</code>, que devuelve la altura de un <code>RoseTree</code> (la cantidad de nodos de la rama más larga). Si el <code>RoseTree</code> es una hoja, se considera que su altura es 1.</li>
+</ul>
+<pre><code class="language-haskell">altura :: RoseTree a -&gt; Integer
+altura = foldRose (\nodo recs -&gt; if null recs then 1 else 1 + maximum recs)
+</code></pre>
+</li>
+</ol>
 <h3 id="ejercicio-24-"><a class="header" href="#ejercicio-24-">Ejercicio 24 ★</a></h3>
 
                     </main>
