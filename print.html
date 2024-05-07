@@ -4564,6 +4564,470 @@ productoAB Nil = 1
 productoAB (Bin hijoIzq nodo hijoDer) = productoAB hijoIzq * nodo * productoAB hijoDer
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="guia-1---programación-funcional"><a class="header" href="#guia-1---programación-funcional">Guia 1 - Programación funcional</a></h1>
+<h2 id="currificación-y-tipos-en-haskell"><a class="header" href="#currificación-y-tipos-en-haskell">Currificación y Tipos en Haskell</a></h2>
+<h3 id="ejercicio-1-"><a class="header" href="#ejercicio-1-">Ejercicio 1 ★</a></h3>
+<p>Sean las siguientes definiciones de funciones:</p>
+<pre><code class="language-haskell">max2 (x, y) | x &gt;= y = x
+            | otherwise = y
+
+normaVectorial (x, y) = sqrt (x^2 + y^2)
+
+substract = flip (-)
+
+predecesor = substract 1
+
+evaluarEnCero = \f -&gt; f 0
+
+dosVeces = \f -&gt; f.f
+
+flipAll = map flip
+
+flipRaro = flip flip
+</code></pre>
+<p><strong>Cuál es el tipo de cada función? Asumir que todos los números son de tipo Float.</strong></p>
+<ul>
+<li>
+<p><code>max2 :: (Float, Float) -&gt; Float</code> ya que toma dos números (que asumimos float) y devuelve uno de los dos</p>
+</li>
+<li>
+<p><code>normaVectorial :: (Float, Float) -&gt; Float</code> ya que toma dos números, los eleva al cuadrado (siguen siendo floats), los suma obteniendo un float y le aplica <code>sqrt</code> que también devuelve un float.</p>
+</li>
+<li>
+<p><code>substract :: Float -&gt; Float -&gt; Float</code></p>
+<ul>
+<li><code>flip :: (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c</code></li>
+<li><code>(-) :: a -&gt; a -&gt; a</code> con <code>Num a</code>, y asumiendo que todos los números son floats queda <code>Float -&gt; Float -&gt; Float</code></li>
+<li>Hago el reorden que hace flip (<code>Float -&gt; Float -&gt; Float</code> de <code>(-)</code> matchea con el <code>(a -&gt; b -&gt; c)</code>) y sigue siendo <code>Float -&gt; Float -&gt; Float</code></li>
+</ul>
+</li>
+<li>
+<p><code>predecesor :: Float -&gt; Float</code> ya que es <code>substract</code> con la aplicación parcial del primer parámetro</p>
+</li>
+<li>
+<p><code>evaluarEnCero :: (Float -&gt; a) -&gt; a</code> ya que recibe una función que toma un número (asumimos float) y a priori puede devolver cualquier cosa.</p>
+</li>
+<li>
+<p><code>dosVeces :: (a -&gt; a) -&gt; (a -&gt; a)</code> ya que la función <code>f</code> que recibe tiene que poder componerse consigo misma y por ende la salida tiene que tener el mismo tipo de la entrada, y la composición me sigue dando algo que recibe el tipo <code>a</code> y devuelve el tipo <code>a</code></p>
+</li>
+<li>
+<p><code>flipAll :: [(a' -&gt; b' -&gt; c')] -&gt; [(b' -&gt; a' -&gt; c')]</code>, o sea es una función que recibe una lista de funciones de 2 parámetros y les invierte los argumentos.</p>
+<ul>
+<li><code>map :: (a -&gt; b) -&gt; [a] -&gt; [b]</code></li>
+<li><code>flip :: (a' -&gt; b' -&gt; c') -&gt; b' -&gt; a' -&gt; c'</code> (los <code>'</code> están para no confundir que son tipos distintos a los de <code>map</code>)
+<ul>
+<li>acá <code>a</code> matchea con <code>(a' -&gt; b' -&gt; c')</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><code>flipRaro :: b -&gt; (a -&gt; b -&gt; c) -&gt; (a -&gt; c)</code> según ghci, y es porque piensa a flip como una función de 2 parámetros que recibe <code>(a' -&gt; b' -&gt; c')</code> y <code>b'</code> y devuelve una función <code>a' -&gt; c'</code></p>
+<ul>
+<li><code>flip :: (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c</code></li>
+<li><code>flip :: (a' -&gt; b' -&gt; c') -&gt; b' -&gt; (a' -&gt; c')</code></li>
+<li>lo que estaría haciendo es dejarte la función como está, pero le tengas que pasar el segundo parámetro de la función. Es como que podés devolver algo que fija el segundo parámetro de cualquier función. Por ejemplo:</li>
+</ul>
+<pre><code class="language-haskell">-- restaFlippeada === (x - 2)
+restaFlipeada = flipRaro 2 (\x -&gt; \y -&gt; x - y)
+-- (1 - 2 = -1)
+ghci&gt; restaFlipeada 1
+-1
+-- (3 - 2 = 1)
+ghci&gt; restaFlipeada 3
+1
+</code></pre>
+</li>
+</ul>
+<p><strong>Alguna de las funciones anteriores no está currificada? De ser así, escribir la versión currificada junto con su tipo para cada una de ellas.</strong></p>
+<p>Sí, las primeras 2 funciones no están currificadas ya que reciben una tupla que no permite hacer la aplicación parcial. Sus versiones currificadas serían</p>
+<pre><code class="language-haskell">max2 :: Float -&gt; Float -&gt; Float
+max2 x y    | x &gt;= y = x
+            | otherwise = y
+
+normaVectorial :: Float -&gt; Float -&gt; Float
+normaVectorial x y = sqrt (x^2 + y^2)
+</code></pre>
+<h3 id="ejercicio-2-"><a class="header" href="#ejercicio-2-">Ejercicio 2 ★</a></h3>
+<ol>
+<li><strong>Definir la función <code>curry</code>, que dada una función de dos argumentos, devuelve su equivalente currificada.</strong></li>
+</ol>
+<pre><code class="language-haskell">-- Primero damos el tipo, uso paréntesis para ser explícito pero puede haber alguno de más
+curry :: ((a, b) -&gt; c) -&gt; (a -&gt; (b -&gt; c))
+-- A f lo tengo que evaluar con la tupla para que tipe bien, no puedo hacer f x y
+curry f = \x -&gt; (\y -&gt; f (x,y))
+-- Alternativa: curry f x y = f (x, y)
+</code></pre>
+<ol start="2">
+<li><strong>Definir la función <code>uncurry</code>, que dada una función currificada de dos argumentos, devuleve su versión no currificada equivalente. Es la inversa de la anterior.</strong></li>
+</ol>
+<pre><code class="language-haskell">uncurry :: (a -&gt; (b -&gt; c)) -&gt; ((a, b) -&gt; c)
+-- Necesito que la nueva función reciba de a tuplas
+uncurry f = \(x, y) -&gt; f x y
+-- Alternativa: uncurry f (x,y) = f x y
+</code></pre>
+<ol start="3">
+<li><strong>Se podría definir una función <code>curryN</code>, que tome una función de un número arbitrario de argumentos y devuelva su versión currificada?</strong></li>
+</ol>
+<p>No, esto no es posible, ya que para aceptar funciones de cualquier cantidad de parámetros, la función debería tener un tipo como:</p>
+<pre><code class="language-haskell">curryN :: (x -&gt; c) -&gt; ...
+</code></pre>
+<p>para que <code>x</code> puede ser una tupla de 1, 2, 3, N parámetros. El problema es que después no tenemos forma de desestructurar eso al otro lado del tipo de la función, ni al definir la función. Otro aproach podría ser el de definir una función recursiva que haga <code>curry</code> tantas veces como sea necesario, pero de vuelta eso requiere saber cuándo tenés una función que recibe más de un parámetro vs cuando recibe 1 y no se puede hacer eso.</p>
+<h2 id="listas-por-comprensión"><a class="header" href="#listas-por-comprensión">Listas por comprensión</a></h2>
+<h3 id="ejercicio-4-"><a class="header" href="#ejercicio-4-">Ejercicio 4 ★</a></h3>
+<p>Una tripla pitagórica es una tripla \((a, b, c)\) de enteros positivos tal
+que \(a^2 + b^2 = c^2\). La siguiente expresión intenta ser una definición de
+una lista (infinita) de triplas pitagóricas:</p>
+<pre><code class="language-haskell">pitagoricas :: [(Integer, Integer, Integer)]
+pitagoricas = [(a, b, c) | a &lt;- [1..], b &lt;- [1..], c &lt;- [1..], a^2 + b^2 == c^2]
+</code></pre>
+<p><strong>Explicar por qué esta definición no es útil. Dar una definición mejor.</strong></p>
+<p>Para entender el problema de esta definición lo mejor es sacarle el syntactic sugar:</p>
+<pre><code class="language-python">def pitagoricas():
+    for a in 1..infinity():
+        for b in 1..infinity():
+            for c in 1..infinity():
+                if a*a + b*b == c*c:
+                    yield (a, b, c)
+</code></pre>
+<p>Esto significa que va a recorrer todos los valores de <code>c</code> posibles antes de
+probar con otros de <code>a</code> y <code>b</code>, o lo que es lo mismo tengo <code>a = b = 1</code> fijos.
+Entonces sólo voy a poder obtener con take las tuplas <code>(1, 1, c)</code> con <code>1*1 + 1*1 = c*c</code> o <code>2 = c*c</code>, lo cual ningún <code>c</code> entero cumple. Una mejor forma sería que iteremos sobre <code>c</code> y la usemos como cota para no iterar infinitamente sobre <code>a</code> y <code>b</code>. Nos quedaría:</p>
+<pre><code class="language-haskell">pitagoricas = [(a, b, c) | c &lt;- [1..], a &lt;- [1..c], b &lt;- [1..c], a^2 + b^2 == c^2]
+</code></pre>
+<h3 id="ejercicio-5-"><a class="header" href="#ejercicio-5-">Ejercicio 5 ★</a></h3>
+<p><strong>Generar la lista de los primeros mil números primos. Observar cómo la evaluación lazy facilita la implementación de esta lista</strong>.</p>
+<pre><code class="language-haskell">primerosMilPrimos :: [Integer]
+primerosMilPrimos = take 1000 [p | p &lt;- [1..], esPrimo p]
+
+esPrimo entero = null [divisor | divisor &lt;- [2..entero-1], mod entero divisor == 0]
+</code></pre>
+<p>Esto se puede generalizar a una función que genera la lista de los primeros <code>n</code> primos</p>
+<pre><code class="language-haskell">primerosPrimos :: Integer -&gt; [Integer]
+primerosPrimos n = take n [p | p &lt;- [1..], esPrimo p]
+</code></pre>
+<p>Esto se ve facilitado por la evaluación lazy ya que el take nos permite generar
+la lista infinita de números primos pero cortando la generación cuando
+queremos. Es también una forma más declarativa de computar.</p>
+<h3 id="ejercicio-7-"><a class="header" href="#ejercicio-7-">Ejercicio 7 ★</a></h3>
+<p><strong>Escribir la función</strong> <code>listasQueSuman :: Int -&gt; [[Int]]</code> <strong>que, dado un número natural</strong> \(n\) <strong>, devuelve todas las listas de enteros positivos (es decir mayores o iguales que 1) cuya suma sea</strong> \(n\). Para este ejercicio se permite usar recursión explícita.</p>
+<p>Idea: En una lista <code>l</code> que suma \(n\), todos sus valores son más chicos que
+\(n\). Por lo tanto, <code>l[1..]</code> es una lista que suma \(n - l[0]\). Pensando
+en eso, podemos pensar en que las listas que suman \(n\) son listas que suman
+algo menor a \(n\), y se les agrega un elemento con la diferencia faltante.</p>
+<pre><code class="language-haskell">listasQueSuman :: Integer -&gt; [[Integer]]
+listasQueSuman 0 = [[]] -- podría definir el caso base como listasQueSuman 1 = [[1]] también
+listasQueSuman n = [i:l | i &lt;- [1..n], l &lt;- listasQueSuman (n - i)]
+</code></pre>
+<h3 id="ejercicio-8-"><a class="header" href="#ejercicio-8-">Ejercicio 8 ★</a></h3>
+<p><strong>Definir en Haskell una lista que contenga todas las listas finitas de enteros positivos (esto es, con elementos mayores o iguales que 1)</strong>.</p>
+<p>Idea: Puedo clusterizar todas las listas finitas de enteros positivos en</p>
+<ul>
+<li>las listas que suman 0</li>
+<li>las listas que suman 1</li>
+<li>...</li>
+<li>las listas que suman n</li>
+</ul>
+<p>Se ve a dónde apuntamos? Reusemos código!</p>
+<pre><code class="language-haskell">allFiniteLists = [l | l &lt;- listasQueSuman (n), n &lt;- [1..]]
+</code></pre>
+<h2 id="esquemas-de-recursión-1"><a class="header" href="#esquemas-de-recursión-1">Esquemas de recursión</a></h2>
+<h3 id="ejercicio-10-"><a class="header" href="#ejercicio-10-">Ejercicio 10 ★</a></h3>
+<ol>
+<li><strong>Redefinir usando <code>foldr</code> las funciones <code>sum</code>, <code>elem</code>, <code>(++)</code>, <code>filter</code> y <code>map</code>.</strong></li>
+</ol>
+<p>Voy a anotar una definición recursiva de cada función (que coincidentalmente se ajuste al formato del <code>foldr</code>) seguido de su versión <em>foldificada</em>™. También para simplificar un poco voy a usar <code>Integer</code> para los números donde sea necesario, y asumo que los tipos son listas aunque en haskel hay una generalización de eso que es con la interfaz <code>Foldable</code>.</p>
+<pre><code class="language-haskell">sum :: [Integer] -&gt; Integer
+sum [] = 0
+sum (x:xs) = x + sum xs
+
+sum2 :: [Integer] -&gt; Integer
+sum2 = foldr (+) 0
+</code></pre>
+<p>Si queremos probarla podemos reusar la función <code>listasQueSuman</code>!</p>
+<pre><code class="language-haskell">ghci&gt; map sum2 (listasQueSuman 4)
+[4,4,4,4,4,4,4,4]
+</code></pre>
+<p>Ahora seguimos con <code>elem</code>, que te dice si un elemento pertenece a una lista.</p>
+<pre><code class="language-haskell">elem :: Eq a =&gt; a -&gt; [a] -&gt; Bool
+elem x [] = False
+elem x (y:ys) = (x == y) || elem x xs 
+
+elem3 x = foldr (\y rec -&gt; (x == y) || rec) False
+</code></pre>
+<p>Seguimos con <code>(++)</code> que es la concatenación de listas. Por simplicidad usemos la versión que no es infija:</p>
+<pre><code class="language-haskell">concatL :: [a] -&gt; [a] -&gt; [a]
+concatL [] ys = ys
+concatL (x:xs) ys = x:(xs ++ ys)
+
+-- invierto el orden de xs e ys así el append queda bien. Si no quedaría y1:y2:y3:...:y_n:xs
+concatL' xs ys = foldr (:) ys xs
+</code></pre>
+<p>Ahora <code>filter</code></p>
+<pre><code class="language-haskell">filtrar :: (a -&gt; Bool) -&gt; [a] -&gt; [a]
+filtrar f [] = []
+filtrar f (x:xs) = if f x then x:rec else rec
+    where rec = filtrar f xs
+
+filtrar' f = foldr (\x rec -&gt; if f x then x:rec else rec) []
+</code></pre>
+<p>Y por último <code>map</code>:</p>
+<pre><code class="language-haskell">mappear :: (a -&gt; b) -&gt; [a] -&gt; [b]
+mappear f [] = []
+mappear f (x:xs) = (f x):(mappear f xs)
+
+mappear' f = foldr (\x rec -&gt; (f x):rec) []
+</code></pre>
+<h3 id="ejercicio-12-"><a class="header" href="#ejercicio-12-">Ejercicio 12 ★</a></h3>
+<p><strong>El siguiente esquema captura la recursión primitiva sobre listas.</strong></p>
+<pre><code class="language-haskell">recr :: (a -&gt; [a] -&gt; b -&gt; b) -&gt; b -&gt; [a] -&gt; b
+recr _ z [] = z
+recr f z (x:xs) = f x xs (recr f z xs)
+</code></pre>
+<p>a. <strong>Definir la función <code>sacarUna :: Eq a =&gt; a -&gt; [a] -&gt; [a]</code> que dados un elemento y una lista devuelve el resultado de eliminar de la lista la primera aparición del elemento (si está presente).</strong></p>
+<pre><code class="language-haskell">sacarUna :: Eq a =&gt; a -&gt; [a] -&gt; [a]
+sacarUna t = recr (\x xs rec -&gt; if x == t then xs else x:rec) []
+</code></pre>
+<p>b. <strong>Explicar por qué el esquema de <code>foldr</code> no es adecuado para implementar la
+función <code>sacarUna</code> del punto anterior.</strong></p>
+<p>Porque en foldr no tengo forma de recuperar lo que queda de lista. Sólo tengo
+el elemento actual y el resultado de la recursión. Y para <code>sacarUna</code> necesito
+esa data porque el resultado recursivo depende en realidad del valor actual
+(cómo sé en la recursión si me queda uno por sacar o no). Si bien es posible
+replicar esto con <code>foldr</code> haciendo que la función en su segunda componente
+devuelva la lista entera / el caso de la recursión si saco el actual y corto +
+el caso de la recursión si no saco el actual, resulta poco práctico y es mucho
+más cómodo usar <code>recr</code> directamente.</p>
+<p>c. <strong>Definir la función <code>insertarOrdenado :: Ord a =&gt; a -&gt; [a] -&gt; [a]</code> que
+inserta un elemento en una lista ordenada (de manera creciente), de manera que
+se preserva el ordenamiento.</strong></p>
+<pre><code class="language-haskell">insertarOrdenado :: Ord a =&gt; a -&gt; [a] -&gt; [a]
+insertarOrdenado t = recr (\x xs rec -&gt; if t &lt; x then t:x:xs else x:rec) [t]
+</code></pre>
+<p>d. <strong>La función <code>listasQueSuman</code> del ejercicio 7, se ajusta al esquema de recursión <code>recr</code>? Por qué o por qué no?</strong></p>
+<p>Recuerdo:</p>
+<pre><code class="language-haskell">listasQueSuman :: Integer -&gt; [[Integer]]
+listasQueSuman 0 = [[]]
+listasQueSuman n = [i:l | i &lt;- [1..n], l &lt;- listasQueSuman (n - i)]
+
+listasQueSuman n = recr (\x xs rec -&gt; ???) [[]] [n..1]
+</code></pre>
+<p>El problema acá es que el resultado de un paso depende de tooooodas las recursiones. No solamente la recursión inmediata:</p>
+<p><img src="./img/practica_1_ej_12.png#center" alt="" /></p>
+<h3 id="ejercicio-14-"><a class="header" href="#ejercicio-14-">Ejercicio 14 ★</a></h3>
+<p>Definir las siguientes funciones para trabajar sobre listas y dar su tipo. Todas ellas deben poder aplicarse a listas <em>finitas</em> e <em>infinitas</em>.</p>
+<ol>
+<li><strong><code>mapPares</code>, una versión de <code>map</code> que toma una función currificada de dos
+argumentos y una lista de pares de valores, y devuelve la lista de
+aplicaciones de la función a cada par. Pista: recordar <code>curry</code> y <code>uncurry</code></strong></li>
+</ol>
+<pre><code class="language-haskell">mapPares :: (a -&gt; b -&gt; c) -&gt; [(a, b)] -&gt; [c]
+mapPares f = map (uncurry f)
+</code></pre>
+<ol start="2">
+<li><strong><code>armarPares</code>, que dadas dos listas arma una lista de pares que contiene,
+en cada posición, el elemento correspondiente a esa posición en cada una de
+las listas. Si una de las listas es más larga que la otra, ignorar los
+elementos que sobran (el resultado tendrá la longitud de la lista más
+corta). Esta función en haskell se llama <code>zip</code>. Pista: aprovechar la
+currificación y utilizar evaluación parcial</strong>.</li>
+</ol>
+<p><img src="./img/a_rough_one.gif#center" alt="" /></p>
+<p>El tipo de mi función va a ser:</p>
+<pre><code class="language-haskell">armarPares :: [a] -&gt; [b] -&gt; [(a, b)]
+</code></pre>
+<p>Creo que el primer paso para sacar esto es usar la sugerencia, asumir que tengo que usar <code>foldr</code> y entender qué tipos van a tener mis funciones</p>
+<pre><code class="language-haskell">armarPares xs yx = foldr (...) (...) xs ys
+</code></pre>
+<p><code>foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; [a] -&gt; b</code>, entonces se que <code>b = [c] -&gt; [(a, c)]</code>. Ahora voy a reemplazar esto sobre la definición del <code>foldr</code>, para tener
+una idea más clara de qué necesito de los parámetros (no sacar fuera de contexto, lo de abajo no es el tipo real de fold, si no que está aplicado a este caso particular):</p>
+<pre><code class="language-haskell">foldr :: (a -&gt; ([c] -&gt; [(a, c)]) -&gt; ([c] -&gt; [(a, c)])) 
+        -&gt; ([c] -&gt; [(a, c)]) 
+        -&gt; [a] 
+        -&gt; [c] -&gt; [(a, c)]
+</code></pre>
+<p>Ahora, esto nos dice también que <code>foldr (...) (...) xs</code> nos va a dar una
+función que al aplicarle <code>ys</code> nos reconstruye la lista de pares. Primera
+consecuencia de eso, quiero una función que cuando <code>xs</code> sea vacío (o sea el
+caso base del fold), me devuelva una función que me devuelva vacío sin importar
+el valor de ys. Es un buen trabajo para <code>const []</code>. Va tomando forma nuestro <code>armarPares</code>:</p>
+<pre><code class="language-haskell">armarPares xs yx = foldr (\x rec -&gt; (\listaDeC -&gt; ...)) (const []) xs ys
+</code></pre>
+<p>Lo siguiente es ver el otro caso borde, qué pasa si <code>ys = []</code>? Para eso podemos agregarle un chequeo a la función recursiva del fold. Si lo tienen todas las iteraciones no me importa mucho:</p>
+<pre><code class="language-haskell">armarPares xs yx = foldr (\x rec -&gt; (\listaDeC -&gt; if null listaDeC then [] else ...)) (const []) xs ys
+</code></pre>
+<p>Lo siguiente es entender qué valor tiene <code>listaDeC</code>. Considerando que quiero ir agrupando elemento a elemento, puedo pensar que en el llamado más externo voy a tener</p>
+<pre><code class="language-haskell">-- con x instanciado en xs[0]
+(\listaDeC -&gt; if null listaDeC then [] else ...) ys
+</code></pre>
+<p>A lo que me gustaría entonces poder hacer <code>(x, head ys):Z</code>, siendo <code>Z</code> el resto de la lista de tuplas que se formaría con los otros valores de <code>xs[1..]</code> y el resto de <code>ys[1..]</code>. Pero eso es precisamente lo que hace <code>rec</code>, es la función que te puede pegar en tuplas <code>x[1..]</code> a lo que reciba como parámetro.</p>
+<pre><code class="language-haskell">(\listaDeC -&gt; if null listaDeC then [] else (x, head ys):(rec tail listaDeC)) ys
+</code></pre>
+<p>Esto también nos permite darle un (en mi opinión) mejor nombre a <code>listaDeC</code>, <code>restanteY</code> o <code>remainingY</code>. El resultado final entonces nos queda:</p>
+<pre><code class="language-haskell">armarPares :: [a] -&gt; [b] -&gt; [(a, b)]
+armarPares xs yx = foldr (\x rec -&gt; 
+                            (\restanteY -&gt; 
+                                if null restanteY then [] 
+                                else (x, head restanteY):(rec tail restanteY)
+                            )
+                        ) (const []) xs ys
+</code></pre>
+<ol start="3">
+<li><strong><code>mapDoble</code>, una variante de <code>mapPares</code> que toma una función currificada de
+dos argumentos y dos listas (de igual longitud) y devuelve una lista de
+aplicaciones de la función a cada elemento correspondiente de las dos
+listas. Esta función en Haskell se llama <code>zipWith</code></strong></li>
+</ol>
+<pre><code class="language-haskell">mapDoble :: (a -&gt; b -&gt; c) -&gt; [a] -&gt; [b] -&gt; [(a, b)]
+mapDoble f = (mapPares f) . armarPares
+</code></pre>
+<h3 id="ejercicio-16-"><a class="header" href="#ejercicio-16-">Ejercicio 16 ★</a></h3>
+<p>Definimos la función <code>generate</code> que genera listas en base a un predicado y una función, de la siguiente manera:</p>
+<pre><code class="language-haskell">generate :: ([a] -&gt; Bool) -&gt; ([a] -&gt; a) -&gt; [a]
+generate stop next = generateFrom stop next []
+
+generateFrom :: ([a] -&gt; Bool) -&gt; ([a] -&gt; a) -&gt; [a] -&gt; [a]
+generateFrom stop next xs   | stop xs = init xs
+                            | otherwise = generateFrom stop next (xs ++ [next xs])
+</code></pre>
+<ol>
+<li><strong>Usando <code>generate</code>, definir <code>generateBase :: ([a] -&gt; Bool) -&gt; a -&gt; (a -&gt; a) -&gt; [a]</code> similar a <code>generate</code>, pero con un caso base para el elemento
+inicial, y una función que, en lugar de calcular el siguiente elemento en
+base a la lista completa, lo calcula solo a partir del último elemento. Por
+ejemplo: <code>generateBase (\l -&gt; not (null l) &amp;&amp; (last l &gt; 256)) 1 (*2)</code> es la
+lista de potencias de 2 menores o iguales que 256</strong>.</li>
+</ol>
+<pre><code class="language-haskell">generateBase :: ([a] -&gt; Bool) -&gt; a -&gt; (a -&gt; a) -&gt; [a]
+generateBase stop base next = generate stop (\l -&gt; if null l then base else next (last l))
+</code></pre>
+<ol start="2">
+<li><strong>Usando <code>generate</code>, definir <code>factoriales :: Int -&gt; [Int]</code> que dado un
+entero <code>n</code> genera la lista de los primeros <code>n</code> factoriales.</strong></li>
+</ol>
+<pre><code class="language-haskell">factoriales :: Int -&gt; [Int]
+factoriales n = generate (\l -&gt; length l == n + 1) (\l -&gt; if null l then 1 else last l * (length l + 1))
+</code></pre>
+<ol start="3">
+<li><strong>Usando <code>generateBase</code>, definir <code>iterateN :: Int -&gt; (a -&gt; a) -&gt; a -&gt; [a]</code>
+que, toma un entero <code>n</code>, una función <code>f</code> y un elemento incial <code>x</code>, y
+devuelve la lista <code>[x, f x, f (f x), ..., f ( f ( ... f ( x )))]</code> de
+longitud <code>n</code>. Nota: <code>iterateN n f x = take n (iterate f x)</code>.</strong></li>
+</ol>
+<pre><code class="language-haskell">iterateN :: Int -&gt; (a -&gt; a) -&gt; a -&gt; [a]
+iterateN n f x = generateBase (\l -&gt; length l == n) x f
+</code></pre>
+<ol start="4">
+<li><strong>Redefinir <code>generateFrom</code> usando <code>iterate</code> y <code>takeWhile</code></strong></li>
+</ol>
+<pre><code class="language-haskell">-- Genero una lista con cada lista parcial [xs, xs ++ [next xs], ...] mientras no me frene la condición y tomo el último para obtener [xs ++ ... [next [xs ++ [next xs]]]]
+generateFrom' :: ([a] -&gt; Bool) -&gt; ([a] -&gt; a) -&gt; [a] -&gt; [a]
+generateFrom' stop next xs  = last (takeWhile (not . stop) (iterate (\l -&gt; l ++ [next l]) xs))
+</code></pre>
+<h2 id="otras-estructuras-de-datos"><a class="header" href="#otras-estructuras-de-datos">Otras estructuras de datos</a></h2>
+<h3 id="ejercicio-17-"><a class="header" href="#ejercicio-17-">Ejercicio 17 ★</a></h3>
+<ol>
+<li><strong>Definir y dar el tipo del esquema de recursión <code>foldNat</code> sobre los naturales. Utilizar el tipo <code>Integer</code> de Haskell (la función va a estar definida sólo para los enteros mayores o iguales que 0).</strong></li>
+</ol>
+<p>Primero damos el tipo (lo único que hice fue reemplazar el <code>[a]</code> del <code>foldr</code> por <code>Integer</code>, y lo mismo para <code>a</code>):</p>
+<pre><code class="language-haskell">foldNat :: (Integer -&gt; b -&gt; b) -&gt; b -&gt; Integer -&gt; b
+</code></pre>
+<p>Y considerando eso podemos pensar en el esquema de recursión:</p>
+<pre><code class="language-haskell">foldNat _ base 0 = base
+foldNat f base n = f n foldNat f base (n-1)
+</code></pre>
+<blockquote>
+<p>Nota: no siempre es más fácil dar el tipo primero.</p>
+</blockquote>
+<ol start="2">
+<li><strong>Utilizando <code>foldNat</code>, definir la función <code>potencia</code></strong>.</li>
+</ol>
+<pre><code class="language-haskell">-- potencia a b = a^b
+potencia :: Integer -&gt; Integer -&gt; Integer
+potencia a = foldNat (\n rec -&gt; a*rec) 1
+</code></pre>
+<h3 id="ejercicio-18"><a class="header" href="#ejercicio-18">Ejercicio 18</a></h3>
+<p><strong>Definir el esquema de recursión estructural para el siguiente tipo:</strong></p>
+<pre><code class="language-haskell">data Polinomio a = X
+                 | Cte a
+                 | Suma (Polinomio a) (Polinomio a)
+                 | Prod (Polinomio a) (Polinomio a)
+</code></pre>
+<p><strong>Luego usar el esquema definido para escribir la función <code>evaluar :: Num a =&gt; a -&gt; Polinomio a -&gt; a</code></strong></p>
+<p>Definimos <code>foldPoli</code>:</p>
+<ul>
+<li>notar que tenemos una función por cada variante del polinomio (cte, x, suma que combina resultados, prod que combina resultados)</li>
+</ul>
+<pre><code class="language-haskell">foldPoli :: Num a =&gt; Num b =&gt; (b -&gt; b -&gt; b)             -- Suma
+            -&gt; (b -&gt; b -&gt; b)                            -- Prod
+            -&gt; (a -&gt; b)                                 -- Const a
+            -&gt; b                                        -- X
+            -&gt; Polinomio a -&gt; b
+foldPoli _ _ baseConst baseX (Cte a) = baseConst a
+foldPoli _ _ _ baseX X = baseX
+foldPoli fSuma fProd baseConst baseX (Suma p1 p2) = fSuma (foldPoli fSuma fProd baseConst baseX p1) (foldPoli fSuma fProd baseConst baseX p2)
+foldPoli fSuma fProd baseConst baseX (Prod p1 p2) = fProd (foldPoli fSuma fProd baseConst baseX p1) (foldPoli fSuma fProd baseConst baseX p2)
+</code></pre>
+<p>Luego <code>evaluar</code>:</p>
+<pre><code class="language-haskell">evaluar :: Num a =&gt; a -&gt; Polinomio a -&gt; a
+evaluar a = foldPoli + * id a
+</code></pre>
+<h3 id="ejercicio-19-"><a class="header" href="#ejercicio-19-">Ejercicio 19 ★</a></h3>
+<p>Se cuenta con la siguiente representación de conjuntos:</p>
+<pre><code class="language-haskell">type Conj a = (a -&gt; Bool)
+</code></pre>
+<p>caracterizados por su función de pretenencia. De este modo, si <code>c</code> es un conjunto y <code>e</code> un elemento, la expresión <code>c e</code> devuelve <code>True</code> sii <code>e</code> pertenece a <code>c</code>.</p>
+<ol>
+<li><strong>Definir la constante <code>vacio :: Conj a</code>, y la función <code>agregar :: Eq a =&gt; a -&gt; Conj a -&gt; Conj a</code>.</strong></li>
+</ol>
+<p>Sabiendo que es una función, <code>vacio</code> va a ser una función que siempre devuelve falso.</p>
+<pre><code class="language-haskell">vacio :: Conj a
+vacio = const False
+</code></pre>
+<p>Por otro lado, definamos primero a agregar expandiendo <code>Conj a</code>:</p>
+<pre><code class="language-haskell">agregar :: Eq a =&gt; a -&gt; (a -&gt; Bool) -&gt; (a -&gt; Bool)
+</code></pre>
+<p>Podemos ver entonces que la función que construimos para representar al nuevo conjunto es ver si coincide con el valor que se agrega, o delegar el chequeo a la función del conjunto previamente existente:</p>
+<pre><code class="language-haskell">agregar :: Eq a =&gt; a -&gt; Conj a -&gt; Conj a
+agregar a c = \elem -&gt; elem == a || c elem
+</code></pre>
+<ol start="2">
+<li><strong>Escribir las funciones <code>intersección</code> y <code>unión</code> (ambas de tipo `Conj a -&gt; Conj a -&gt; Conj a).</strong></li>
+</ol>
+<pre><code class="language-haskell">interseccion :: Conj a -&gt; Conj a -&gt; Conj a
+interseccion u v x = u x &amp;&amp; v x 
+
+union :: Conj a -&gt; Conj a -&gt; Conj a
+union u v x = u x || v x 
+</code></pre>
+<ol start="3">
+<li><strong>Definir un conjunto de funciones que contenga infinitos elementos, y dar su tipo..</strong></li>
+</ol>
+<p>El ejemplo más sencillo que se me viene a la mente es el conjunto de todas las funciones por lo menos unarias. Su tipo sería <code>Conj (a -&gt; b)</code>:</p>
+<pre><code class="language-haskell">todasUnariasOMas :: Conj (a -&gt; b)
+todasUnariasOMas = const True
+</code></pre>
+<ol start="4">
+<li><strong>Definir la función <code>singleton :: Eq a =&gt; a -&gt; Conj a</code> que dado un valor genere un conjunto con ese valor como único elemento.</strong></li>
+</ol>
+<pre><code class="language-haskell">singleton :: Eq a =&gt; a -&gt; Conj a
+singleton a = agregar a vacio
+</code></pre>
+<ol start="5">
+<li><strong>Puede definirse un <code>map</code> para esta estructura? De qué manera, o por qué no?.</strong></li>
+</ol>
+<pre><code class="language-haskell">mapConjunto :: Eq a =&gt; (a -&gt; b) -&gt; Conj a -&gt; Conj b
+mapConjunto f c = \x -&gt; ???
+</code></pre>
+<p>El problema es que no tengo forma de observar qué cosas tiene el conjunto <code>c</code>
+sin probar con todos los enteros, y hay infinitos enteros.</p>
+<ul>
+<li>Alternativa 1, pedir que me pasen en una lista el dominio del conjunto. Puede que no funcione para conjuntos infinitos</li>
+<li>Alternativa 2, puedo asumir que la función que me pasan en realidad es la inversa de la que quiero</li>
+</ul>
+<pre><code class="language-haskell">mapConjunto fInv c = \x -&gt; c (fInv x)
+</code></pre>
+<h3 id="ejercicio-21-"><a class="header" href="#ejercicio-21-">Ejercicio 21 ★</a></h3>
+<h3 id="ejercicio-23-"><a class="header" href="#ejercicio-23-">Ejercicio 23 ★</a></h3>
+<h3 id="ejercicio-24-"><a class="header" href="#ejercicio-24-">Ejercicio 24 ★</a></h3>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="guia-2---cálculo-lambda-tipado"><a class="header" href="#guia-2---cálculo-lambda-tipado">Guia 2 - Cálculo Lambda Tipado</a></h1>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="guia-3---inferencia-de-tipos"><a class="header" href="#guia-3---inferencia-de-tipos">Guia 3 - Inferencia de Tipos</a></h1>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="guia-4---subtipado"><a class="header" href="#guia-4---subtipado">Guia 4 - Subtipado</a></h1>
