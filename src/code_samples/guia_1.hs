@@ -173,3 +173,48 @@ union u v x = u x || v x
 
 todasUnariasOMas :: Conj (a -> b)
 todasUnariasOMas = const True
+
+-- EJERCICIO 21
+data AHD tInterno tHoja = Hoja tHoja
+                        | Rama tInterno (AHD tInterno tHoja)
+                        | Bin (AHD tInterno tHoja) tInterno (AHD tInterno tHoja) deriving (Show, Eq)
+
+foldAHD :: (a -> c -> c -> c)   -- Bin
+        -> (a -> c -> c)        -- Rama
+        -> (b -> c)             -- Hoja
+        -> AHD a b
+        -> c
+
+foldAHD _ _ fHoja (Hoja a) = fHoja a
+foldAHD fBin fRama fHoja (Rama a subarbol) = fRama a (foldAHD fBin fRama fHoja subarbol)
+foldAHD fBin fRama fHoja (Bin subarbolIzq a subarbolDer) = fBin a (rec subarbolIzq) (rec subarbolDer)
+                                                        where rec = foldAHD fBin fRama fHoja
+
+mapAHD :: (a -> b) -> (c -> d) -> AHD a c -> AHD b d
+mapAHD fInternos fHojas = foldAHD (\nodo recIzq recDer -> Bin recIzq (fInternos nodo) recDer) 
+                                  (Rama . fInternos)
+                                  (Hoja . fHojas)
+
+
+ejemploAHD = Bin(Rama 1 (Hoja False)) 2 (Bin(Hoja False) 3 (Rama 5 (Hoja True)))
+expectedEjemploMapeado = Bin (Rama 2 (Hoja True)) 3 (Bin (Hoja True) 4 (Rama 6 (Hoja False)))
+
+-- EJERCICIO 23
+data RoseTree t = Nodo t [RoseTree t] deriving (Show, Eq)
+
+foldRose :: (a -> [b] -> b) -> RoseTree a -> b
+foldRose f (Nodo a ts) = f a (map (foldRose f) ts)
+
+mapRose :: (a -> b) -> RoseTree a -> RoseTree b
+mapRose f = foldRose (Nodo . f)
+
+hojas :: RoseTree a -> [a]
+hojas = foldRose (\nodo recs -> if null recs then [nodo] else concat recs)
+
+distancias :: RoseTree a -> [Integer]
+distancias = foldRose (\nodo recs -> if null recs then [0] else map (+1) (concat recs))
+
+altura :: RoseTree a -> Integer
+altura = foldRose (\nodo recs -> if null recs then 1 else 1 + maximum recs)
+
+ejemploRose = Nodo 0 [Nodo 1 [], Nodo 2 [], Nodo 3 []]

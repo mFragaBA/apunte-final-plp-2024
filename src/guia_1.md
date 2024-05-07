@@ -597,5 +597,112 @@ mapConjunto fInv c = \x -> c (fInv x)
 ```
 
 ### Ejercicio 21 ★
+
+Consideremos el siguiente tipo de datos:
+
+```haskell
+data AHD tInterno tHoja = Hoja tHoja
+                        | Rama tInterno (AHD tInterno tHoja)
+                        | Bin (AHD tInterno tHoja) tInterno (AHD tInterno tHoja)
+```
+
+que representa un árbol binario no vacío cuyos nodos internos pueden tener datos de un tipo deiferente al de sus hojas (AHD = árbol con hojas distinguidas). Por ejemplo: 
+
+- `Bin (Hoja "hola") 'b' (Rama 'c' (Hoja "chau))` tiene tipo `AHD Char String`
+- `Rama 1 (Bin (Hoja True) -2 (Hoja False))` tiene tipo `AHD Int Bool`
+
+Algunos ejemplos de forma más gráfica:
+
+![](./img/practica_1_ej_21.png#center)
+
+1. **Escribir el esquema de recursión estructural `foldAHD` para este tipo de datos y dar su tipo**.
+
+Consejo antes de empezar, si van a probarlo desde la computadora, métanle un `deriving (Show, Eq)` al final de la definición de `AHD`.
+
+Primero damos el tipo. Recuerdo que necesito una función para cada constructor
+
+```haskell
+-- siendo a = tInterno, b = tHoja y c = el tipo resultante
+foldAHD :: (a -> c -> c -> c)   -- Bin
+        -> (a -> c -> c)        -- Rama
+        -> (b -> c)             -- Hoja
+        -> AHD a b
+        -> c
+```
+
+Y luego damos el esquema:
+
+```haskell
+foldAHD _ _ fHoja (Hoja a) = fHoja a
+foldAHD fBin fRama fHoja (Rama a subarbol) = fRama a (foldAHD fBin fRama fHoja subarbol)
+foldAHD fBin fRama fHoja (Bin subarbolIzq a subarbolDer) = fBin a (rec subarbolIzq) (rec subarbolDer)
+                                                        where rec = foldAHD fBin fRama fHoja
+```
+
+2. **Escribir, usando `foldAHD`, la función `mapAHD :: (a -> b) -> (c -> d) -> AHD a c -> AHD b d`, que actúa de manera análoga al `map` de listas, aplicando la primera función a los nodos internos y la segunda a las hojas. Por ejemplo:**
+
+```haskell
+mapAHD :: (a -> b) -> (c -> d) -> AHD a c -> AHD b d
+mapAHD fInternos fHojas = foldAHD (\nodo recIzq recDer -> Bin recIzq (fInternos nodo) recDer) 
+                                  (Rama . fInternos)
+                                  (Hoja . fHojas)
+```
+
 ### Ejercicio 23 ★
+
+1. **Definir el tipo de datos `RoseTree` de árboles no vacíos, donde cada nodo tiene una cantidad indeterminada de hijos.**
+
+```haskell
+data RoseTree t = Nodo t [RoseTree t] deriving (Show, Eq)
+```
+
+Cuando la lista es vacía asumimos que tenemos una hoja.
+
+2. **Escribir el esquema de recursión estructural para `RoseTree`. Importante escribir primero su tipo**.
+
+Siguiendo la sugerencia primero el tipo:
+
+```haskell
+foldRose :: (a -> [b] -> b) -> RoseTree a -> b
+```
+
+A priori no necesito caso base porque las hojas son cuando la lista es vacía, se puede manejar con la misma función.
+
+Luego la definición:
+
+```haskell
+foldRose f (Nodo a ts) = f a (map (foldRose f) ts)
+```
+
+Extra: con `foldRose` puedo definir `mapRose`:
+
+```haskell
+mapRose :: (a -> b) -> RoseTree a -> RoseTree b
+mapRose f = foldRose (Nodo . f)
+-- equivalente a 
+-- mapRose f = foldRose (\nodo recs -> Nodo (f nodo) recs)
+```
+
+3. **Usando el esquema definido, escribir las siguientes funciones:**
+    - a. `hojas`, que dado un `RoseTree`, devuelva la lista con sus hojas ordenadas de izquierda a derecha según su aparición en el `RoseTree`
+
+    ```haskell
+    hojas :: RoseTree a -> [a]
+    hojas = foldRose (\nodo recs -> if null recs then [nodo] else concat recs)
+    ```
+
+    - b. `distancias`, que dado un `RoseTree`, devuelva las distancias de su raíz a cada una de sus hojas.
+
+    ```haskell
+    distancias :: RoseTree a -> [Integer]
+    distancias = foldRose (\nodo recs -> if null recs then [0] else concat (map (+1) recs))
+    ```
+
+    - c. `altura`, que devuelve la altura de un `RoseTree` (la cantidad de nodos de la rama más larga). Si el `RoseTree` es una hoja, se considera que su altura es 1.
+
+    ```haskell
+    altura :: RoseTree a -> Integer
+    altura = foldRose (\nodo recs -> if null recs then 1 else 1 + maximum recs)
+    ```
+
 ### Ejercicio 24 ★
