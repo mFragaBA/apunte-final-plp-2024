@@ -218,3 +218,55 @@ altura :: RoseTree a -> Integer
 altura = foldRose (\nodo recs -> if null recs then 1 else 1 + maximum recs)
 
 ejemploRose = Nodo 0 [Nodo 1 [], Nodo 2 [], Nodo 3 []]
+
+-- EJERCICIO 24
+data MEN a b = AM { sigma :: [a], delta :: a -> b -> [b]}
+
+mPlp :: MEN Char Char
+mPlp = AM ['l', 'p'] tran
+    where tran s e | e == '0' && s == 'p' = ['1']
+                    | e == '1' && s == 'l' = ['2', '3']
+                    | e == '2' && s == 'p' = ['4']
+                    | otherwise = []
+
+agregarTransicion :: Eq a => Eq b => a -> b -> b -> MEN a b -> MEN a b
+agregarTransicion a b c AM { sigma, delta } = AM { sigma, delta = \x y -> (if x == a && y == b then [c] else []) ++ delta x y }
+
+interseccionMEN :: Eq a => MEN a b -> MEN a c -> MEN a (b, c)
+interseccionMEN (AM { sigma = sigma1, delta = delta1 }) 
+                (AM { sigma = sigma2, delta = delta2 }) = AM { 
+                  sigma = unionList sigma1 sigma2, 
+                  delta = \x (y, z) -> [(q, q') | q <- delta1 x y, q' <- delta2 x z] 
+                }
+
+unionList :: Eq a => [a] -> [a] -> [a]
+unionList xs ys = dedup (xs ++ ys)
+
+dedup :: Eq a => [a] -> [a]
+dedup (x:xs) | x `elem` xs = xs
+             | otherwise = x:dedup xs
+
+conTrampa :: Eq b => b -> MEN a b -> MEN a b
+conTrampa q (AM { sigma, delta }) = AM {
+                                    sigma,
+                                    delta = \x y -> let next = delta x y in
+                                      if null next then [q] else next
+                                }
+
+consumir :: Eq a => Eq b => MEN a b -> b -> [a] -> [b]
+consumir (AM { sigma, delta }) q ss = foldr (concatMap . delta) [q] (reverse ss)
+
+-- variante usando foldl
+consumir' :: Eq a => Eq b => MEN a b -> b -> [a] -> [b]
+consumir' (AM { sigma, delta }) q = foldl (\rec c -> concatMap (delta c) rec) [q]
+
+trazas :: Eq a => Eq b => MEN a b -> b -> [[a]]
+trazas (AM { sigma, delta }) q = concat (generateBase stop start next)
+    where start = [[e] | e <- sigma, not (null (delta e q))]
+          stop traces = not (null traces) && null (last traces)
+          next current_traces = [ newTrace | 
+                                  trace <- current_traces, 
+                                  e <- sigma, 
+                                  let newTrace = trace ++ [e], 
+                                  not (null (consumir (AM { sigma, delta }) q newTrace))
+                                ]
