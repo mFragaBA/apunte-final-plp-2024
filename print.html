@@ -5111,6 +5111,127 @@ altura = foldRose (\nodo recs -&gt; if null recs then 1 else 1 + maximum recs)
 </li>
 </ol>
 <h3 id="ejercicio-24-"><a class="header" href="#ejercicio-24-">Ejercicio 24 ★</a></h3>
+<p>Las máquinas de estados no determinísticas (MEN) se pueden ver como una descripción de un sistema que,
+al recibir como entrada una constante de un alfabeto (que en general llamamos \(\Sigma\)), y encontrándose en un
+estado q, altera su estado según lo indique una función de transición (que en general llamamos \(\delta\)). Observemos
+que al ser una máquina no determinística, el resultado de esta función de transición no es un único estado sino
+un conjunto de ellos.
+Modelaremos estos autómatas mediante el tipo <code>MEN</code>:</p>
+<pre><code class="language-haskell">data MEN a b = AM { sigma :: [a], delta :: (a -&gt; b -&gt; [b])}
+</code></pre>
+<p>Luego, el sistema representado por <code>m :: MEN a b</code> que se encuentra en un estado
+<code>q :: b</code>, después de recibir una entrada <code>s :: a</code> tal que <code>s ∈ sigma m</code>, se
+encontrará en alguno de los estados <code>delta m s q</code> (si esta lista es vacía
+significa que <code>s</code> es una transición inválida, mientras que si contiene muchos
+estados, significa que puede alcanzar cualquiera de ellos, sin que podamos
+suponer nada sobre cuál será). Por ejemplo,:</p>
+<p><img src="./img/practica_1_ej_24.png#center" alt="" /></p>
+<pre><code class="language-haskell">mPlp :: MEN Char Char
+mPlp = AM ['l', 'p'] tran
+    where tran s e | e == q_0 &amp;&amp; s == 'p' = [q_1]
+                    | e == q_1 &amp;&amp; s == 'l' = [q_2, q_3]
+                    | e = q_2 &amp;&amp; s == 'p' = [q_3]
+                    | otherwise = []
+</code></pre>
+<p>Se pide definir las siguientes funciones, <strong>sin usar recursión explícita</strong> (suponer que existe <code>union</code> que es como <code>++</code> pero sin repetidos):</p>
+<ol>
+<li>
+<p><strong><code>agregarTransicion :: a -&gt; b -&gt; b -&gt; MEN a b -&gt; MEN a b</code> que, dada una
+constante <code>s</code> y dos estados <code>q_0</code> y <code>q_f</code>, agrega al autómata la transición
+por <code>s</code> desde <code>q_0</code> a <code>q_f</code>. Si lo necesita, puede suponer que la transición
+no está previamente definida en el autómata, que <code>s</code> ya pertenece al
+alfabeto y que está definida la igualdad para los tipos <code>a</code> y <code>b</code>, indicando
+qué suposiciones realiza</strong>.</p>
+<p>Primero tenemos que entender bien cómo funciona esta definición de autómata.</p>
+<ul>
+<li>El tipo <code>a</code> de <code>MEN a b</code> va a definir los caracteres que acepta</li>
+<li>El tipo <code>b</code> va a representar los estados, que por simplicidad puede que
+asuma que son de tipo <code>Char</code> siempre, pero puede ser de cualquier tipo,
+la verdad es indistinto</li>
+<li>Entonces, si quiero agregar una transición lo único que tengo que hacer
+es redefinir la función delta para que además de los estados a los que ya
+te lleva, sumarle el de la transición agregada (en caso de matchear).</li>
+</ul>
+<pre><code class="language-haskell">agregarTransicion :: Eq a =&gt; Eq b =&gt; a -&gt; b -&gt; b -&gt; MEN a b -&gt; MEN a b
+agregarTransicion a b c AM { sigma, delta } = AM { sigma, delta = \x y -&gt; (if x == a &amp;&amp; y == b then [c] else []) ++ delta x y }
+</code></pre>
+</li>
+<li>
+<p><strong><code>interseccion :: Eq a =&gt; MEN a b -&gt; MEN a c -&gt; MEN a (b, c)</code> que dados dos
+autómatas <code>m</code> y <code>n</code>, devuelve el autómata intersección, cuyo alfabeto es la
+unión de los dos alfabetos, cuyos estados son el producto cartesiano del
+conjunto de estados de cada uno y que puede moverse de <code>(q_m, q_n)</code> por el
+símbolo <code>s</code> al estado <code>(q_m', q_n')</code> si y solo si <code>m</code> puede moverse de <code>q_m</code>
+a <code>q_m'</code> por <code>s</code> y <code>n</code> puede moverse de <code>q_n</code> a <code>q_n'</code> por el mismo <code>s</code></strong>.</p>
+<pre><code class="language-haskell"> interseccionMEN :: Eq a =&gt; MEN a b -&gt; MEN a c -&gt; MEN a (b, c)
+ interseccionMEN (AM { sigma = sigma1, delta = delta1 }) 
+                 (AM { sigma = sigma2, delta = delta2 }) = AM { 
+                   sigma = union sigma1 sigma2, 
+                   delta = \x (y, z) -&gt; [(q, q') | q &lt;- delta1 x y, q' &lt;- delta2 x z] 
+                 }
+</code></pre>
+</li>
+<li>
+<p><strong><code>conTrampa :: b -&gt; MEN a b -&gt; MEN a b</code></strong> que, dados un estado <code>q</code> y un
+autómata, devuelve un autómata equivalente con el estado trampa <code>q</code>
+agregado. Un estado trampa es un estado especial al que se accede después de
+realizar una transición indefinida y del que no se puede salir. Por ejemplo,
+el autómata <code>conTrampa M_plp</code>, al leer las cadenas "slp", "pnp", "snp" o
+"plpxxxxxxxxxx" (entre otras), debe terminar en el estado trampa, pues todas
+incluyen por lo menos una transición indefinida.</p>
+<pre><code class="language-haskell"> conTrampa :: b -&gt; MEN a b -&gt; MEN a b
+ conTrampa q (AM { sigma, delta }) = AM {
+                                     sigma,
+                                     delta = \x y -&gt; let next = delta x y
+                                         in if null next then q else next
+                                 }
+</code></pre>
+<p>Lo único negativo de esto es que alguien podría agregarle transiciones
+salientes del estado trampa a otro y deja de ser trampa (restricciones de la
+forma en la que implementamos delta).</p>
+</li>
+<li>
+<p><strong><code>consumir :: Eq a =&gt; Eq b =&gt; MEN a b -&gt; b -&gt; [a] -&gt; [b]</code> que, dados un autómata <code>m</code>, un
+estado <code>q</code>, y una cadena de símbolos <code>ss</code> (en ese orden), devuelve todos los
+estados en los que se puede encontrar <code>m</code> después de haber leido los símbolos
+de <code>ss</code> (en ese orden), habiendo partido del estado <code>q</code>. Recordar que el
+autómata es no determinístico y, por ende, para cada símbolo y estado, la
+función de transición <code>delta</code> devuelve una lista de estados posibles a los que
+se puede mover. Si lo necesita, puede suponer definida la igualdad para los
+tipos <code>a</code> y <code>b</code>.</strong>.</p>
+<p>Para esto me gustaría usar un fold, pero el problema que tiene el foldr es que procesa al revés de como quiero. Así que puedo, o bien hacerle un reverse a <code>ss</code>.</p>
+<pre><code class="language-haskell"> consumir :: Eq a =&gt; Eq b =&gt; MEN a b -&gt; b -&gt; [a] -&gt; [b]
+ consumir (AM { sigma, delta }) q ss = foldr (\c rec -&gt; concat (map (delta c) rec)) [q] (reverse ss)
+</code></pre>
+<p>O directamente usar <code>foldl</code>:</p>
+<pre><code class="language-haskell"> consumir :: Eq a =&gt; Eq b =&gt; MEN a b -&gt; b -&gt; [a] -&gt; [b]
+ consumir (AM { sigma, delta }) q = foldl [q] (\rec c -&gt; concat (map (delta c) rec))
+</code></pre>
+</li>
+<li>
+<p><strong><code>trazas :: Eq a =&gt; Eq b =&gt; MEN a b -&gt; b -&gt; [[a]]</code></strong> que  dado un autómata <code>m</code> y un estado <code>q</code>,
+devuelve la lista con todas las trazas posibles en <code>m</code> a partir de <code>q</code>, es
+decir, todas las cadenas de símbolos que pueden llevar a <code>m</code> desde <code>q</code> a algún
+estado mediante transiciones válidas. Asumir que existe al menos un ciclo en
+el autómata, por lo que la lista resultante es infinita. Si lo necesita,
+puede suponer que tanto el alfabeto como el resultado de las transiciones
+son finitos, y que está definida la igualdad para los tipos <code>a</code> y <code>b</code>. Deberá
+indicar qué suposiciones realiza y por qué. En el autómata de ejemplo,
+<code>trazas mPlp q_0  ~&gt; [['p'], ['p', 'l'], ['p', 'l', 'p']]</code></p>
+<pre><code class="language-haskell"> trazas :: Eq a =&gt; Eq b =&gt; MEN a b -&gt; b -&gt; [[a]]
+ trazas (AM { sigma, delta }) q = concat (generateBase stop start next)
+     where start = [[e] | e &lt;- sigma, not (null (delta e q))]
+           stop traces = not (null traces) &amp;&amp; null (last traces)
+           next current_traces = [ newTrace | 
+                                   trace &lt;- current_traces,
+                                   e &lt;- sigma, 
+                                   let newTrace = trace ++ [e], 
+                                   not (null (consumir (AM { sigma, delta }) q newTrace))
+                                 ]
+</code></pre>
+<p>(llegué a esta solución y me di cuenta tarde de que <code>generateBase</code> no se banca generación infinita, si alguien quiere mandar un PR con un generateBase que pueda usar para generar listas infinitas mande un PR y será revisado).</p>
+</li>
+</ol>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="guia-2---cálculo-lambda-tipado"><a class="header" href="#guia-2---cálculo-lambda-tipado">Guia 2 - Cálculo Lambda Tipado</a></h1>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="guia-3---inferencia-de-tipos"><a class="header" href="#guia-3---inferencia-de-tipos">Guia 3 - Inferencia de Tipos</a></h1>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="guia-4---subtipado"><a class="header" href="#guia-4---subtipado">Guia 4 - Subtipado</a></h1>
